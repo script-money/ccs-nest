@@ -19,7 +19,8 @@ import {
   RedisLockService,
   RedisLock,
 } from '@huangang/nestjs-simple-redis-lock';
-import { time } from 'console';
+import { InjectRedis } from '@liaoliaots/nestjs-redis';
+import { Redis } from 'ioredis';
 
 @Injectable()
 export class ActivityTask {
@@ -32,6 +33,7 @@ export class ActivityTask {
   constructor(
     protected readonly config: ConfigService,
     protected readonly lockService: RedisLockService,
+    @InjectRedis() private readonly defaultRedisClient: Redis,
     @Inject(ActivityService) private readonly activityService: ActivityService,
     @Inject(TaskUtils) private readonly taskUtils: TaskUtils,
   ) {
@@ -43,10 +45,13 @@ export class ActivityTask {
     this.closeActivityIntervalMinutes = config.get(
       `${env}.closeActivityIntervalMinutes`,
     );
+    this.defaultRedisClient.del(':lock:activitiesUpdate');
+    this.defaultRedisClient.del(':lock:parameterUpdate');
+    this.defaultRedisClient.del(':lock:closeActivity');
   }
 
   @Cron(SHORT_INTERVAL)
-  @RedisLock('activitiesUpdate') // 1 minute release lock
+  @RedisLock('activitiesUpdate', 24 * 60 * 60 * 1000) // 1 day release lock
   async activitiesUpdate() {
     const lastBlock = await this.taskUtils.saveEventsToDB(
       this.contractAddr,
@@ -76,7 +81,7 @@ export class ActivityTask {
   }
 
   @Cron(LONG_INTERVAL)
-  @RedisLock('parameterUpdate', 5 * 60 * 60 * 1000) // 5 hours release lock
+  @RedisLock('parameterUpdate', 24 * 60 * 60 * 1000) // 1 day release lock
   async parameterUpdate() {
     const lastBlock = await this.taskUtils.saveEventsToDB(
       this.contractAddr,
@@ -97,7 +102,7 @@ export class ActivityTask {
   }
 
   @Cron(MID_INTERVAL)
-  @RedisLock('closeActivity', 5 * 60 * 1000) // 5 minutes release lock
+  @RedisLock('closeActivity', 24 * 60 * 60 * 1000) // 1 day release lock
   async closeActivity() {
     await this.activityService.close(this.closeActivityIntervalMinutes);
   }

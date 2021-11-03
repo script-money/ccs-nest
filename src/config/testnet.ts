@@ -8,7 +8,7 @@ const nonFungibleToken = '0x631e88ae7f1d7c20';
 const shortQueryBlock = 20; // fit every 20 seconds
 const midRangeQueryBlock = 60; // fit greater than 1 minute
 const maxRangeQueryBlock = 250;
-const closeActivityIntervalMinutes = 3;
+const closeActivityIntervalMinutes = 60 * 24; // 1 day
 const startHeight = Number(process.env.START_HEIGHT); // check at https://testnet.flowscan.org/
 
 const minterFlowAddress = process.env.MINTER_ADDRESS;

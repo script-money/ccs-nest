@@ -41,6 +41,7 @@ export class TaskUtils {
 
     if (!lastBlock) {
       lastBlock = await this.flowService.getLatestBlockHeight();
+      console.log(`newest blockheight is ${lastBlock}`);
     }
     const interval = lastBlock - initStartBlock;
 
@@ -53,7 +54,7 @@ export class TaskUtils {
 
     const epoch = Math.floor(interval / queryBlockRange);
     if (epoch === 0) {
-      // console.log(`interval is ${interval}, wait for next query`);
+      console.log(`${eventName} interval is ${interval}, wait for next query`);
       return;
     }
 
@@ -61,18 +62,25 @@ export class TaskUtils {
     for (const i of [...Array(epoch).keys()]) {
       const queryEndAt = initStartBlock + (i + 1) * queryBlockRange;
 
-      const result = await this.flowService.getEvents({
-        contractAddr: fcl.sansPrefix(contractAddr),
-        contractName,
-        eventName,
-        endBlock: Math.min(queryEndAt, lastBlock),
-      });
+      let result = undefined;
+      while (result === undefined) {
+        try {
+          result = await this.flowService.getEvents({
+            contractAddr: fcl.sansPrefix(contractAddr),
+            contractName,
+            eventName,
+            endBlock: Math.min(queryEndAt, lastBlock),
+          });
 
-      if (result !== undefined && result.length !== 0) {
-        result.forEach(async (event: Event) => {
-          console.log(`save ${ormFunction.name} event to db`, event.data);
-          await ormFunction(event.data);
-        });
+          if (result !== undefined && result.length !== 0) {
+            result.forEach(async (event: Event) => {
+              console.log(`save ${ormFunction.name} event to db`, event.data);
+              await ormFunction(event.data);
+            });
+          }
+        } catch (error) {
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        }
       }
     }
     return lastBlock;

@@ -193,19 +193,30 @@ export class FlowService {
       `query ${key} from ${savedCursor.currentHeight + 1} to ${endBlock}`,
     );
 
-    const events: Event[] = await fcl
-      .send([
-        fcl.getEventsAtBlockHeightRange(
-          key,
-          savedCursor.currentHeight + 1,
-          endBlock,
-        ),
-      ])
-      .then(fcl.decode);
-    await this.blockCursorService.updateBlockCursorById(
-      savedCursor.id,
-      endBlock,
-    );
-    return events;
+    try {
+      const events: Event[] = await fcl
+        .send([
+          fcl.getEventsAtBlockHeightRange(
+            key,
+            savedCursor.currentHeight + 1,
+            endBlock,
+          ),
+        ])
+        .then(fcl.decode);
+      await this.blockCursorService.updateBlockCursorById(
+        savedCursor.id,
+        endBlock,
+      );
+      return events;
+    } catch (error) {
+      console.warn(
+        `get Range error ${savedCursor.currentHeight + 1} to ${endBlock}`,
+      );
+      await this.blockCursorService.updateBlockCursorById(
+        savedCursor.id,
+        savedCursor.currentHeight + 1,
+      );
+      throw new Error(error);
+    }
   }
 }
