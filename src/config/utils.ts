@@ -19,4 +19,13 @@ export default {
         );
     }
   },
+  redisServer() {
+    return {
+      host: 'localhost',
+      port: '6379',
+      db: 3,
+      password: '',
+      keyPrefix: '',
+    };
+  },
 };

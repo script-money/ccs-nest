@@ -7,6 +7,10 @@ import {
   depositMemorials,
   withDrawMemorials,
 } from 'src/orm/momerials';
+import {
+  RedisLock,
+  RedisLockService,
+} from '@huangang/nestjs-simple-redis-lock';
 
 @Injectable()
 export class MemorialsTask {
@@ -14,7 +18,8 @@ export class MemorialsTask {
   private contractName: string;
   private midRangeQueryBlock: number;
   constructor(
-    private readonly config: ConfigService,
+    protected readonly config: ConfigService,
+    protected readonly lockService: RedisLockService,
     @Inject(TaskUtils) private readonly taskUtils: TaskUtils,
   ) {
     const env = config._env();
@@ -24,6 +29,7 @@ export class MemorialsTask {
   }
 
   @Cron(MID_INTERVAL)
+  @RedisLock('memorialsUpdate', 5 * 60 * 1000) // 5 minutes release lock
   async memorialsUpdate() {
     const lastBlock = await this.taskUtils.saveEventsToDB(
       this.contractAddr,

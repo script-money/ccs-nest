@@ -15,6 +15,11 @@ import {
   rewardParameterUpdated,
 } from 'src/orm/activity';
 import { ActivityService } from '../service/activity.service';
+import {
+  RedisLockService,
+  RedisLock,
+} from '@huangang/nestjs-simple-redis-lock';
+import { time } from 'console';
 
 @Injectable()
 export class ActivityTask {
@@ -25,7 +30,8 @@ export class ActivityTask {
   private closeActivityIntervalMinutes: number;
 
   constructor(
-    private readonly config: ConfigService,
+    protected readonly config: ConfigService,
+    protected readonly lockService: RedisLockService,
     @Inject(ActivityService) private readonly activityService: ActivityService,
     @Inject(TaskUtils) private readonly taskUtils: TaskUtils,
   ) {
@@ -40,6 +46,7 @@ export class ActivityTask {
   }
 
   @Cron(SHORT_INTERVAL)
+  @RedisLock('activitiesUpdate') // 1 minute release lock
   async activitiesUpdate() {
     const lastBlock = await this.taskUtils.saveEventsToDB(
       this.contractAddr,
@@ -69,6 +76,7 @@ export class ActivityTask {
   }
 
   @Cron(LONG_INTERVAL)
+  @RedisLock('parameterUpdate', 5 * 60 * 60 * 1000) // 5 hours release lock
   async parameterUpdate() {
     const lastBlock = await this.taskUtils.saveEventsToDB(
       this.contractAddr,
@@ -89,6 +97,7 @@ export class ActivityTask {
   }
 
   @Cron(MID_INTERVAL)
+  @RedisLock('closeActivity', 5 * 60 * 1000) // 5 minutes release lock
   async closeActivity() {
     await this.activityService.close(this.closeActivityIntervalMinutes);
   }

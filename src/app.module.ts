@@ -1,5 +1,5 @@
 import { Module, CacheModule } from '@nestjs/common';
-import { ConfigModule } from 'nestjs-config';
+import { ConfigModule, ConfigService } from 'nestjs-config';
 import { ScheduleModule } from '@nestjs/schedule';
 import * as path from 'path';
 import { UserService } from './service/user.service';
@@ -15,6 +15,8 @@ import { TaskUtils } from './task/utils';
 import { CCSTokenTask } from './task/ccsToken';
 import { BallotTask } from './task/ballot';
 import { MemorialsTask } from './task/memorials';
+import { RedisManager, RedisModule } from '@liaoliaots/nestjs-redis';
+import { RedisLockModule } from '@huangang/nestjs-simple-redis-lock';
 
 const ENV = process.env.NODE_ENV;
 
@@ -25,6 +27,19 @@ const ENV = process.env.NODE_ENV;
     }),
     CacheModule.register(),
     ScheduleModule.forRoot(),
+    RedisModule.forRootAsync({
+      useFactory: async (config: ConfigService) => ({
+        closeClient: true,
+        config: config._redisServer(),
+      }),
+      inject: [ConfigService],
+    }),
+    RedisLockModule.registerAsync({
+      useFactory: async (redisManager: RedisManager) => {
+        return { prefix: ':lock:', client: redisManager.getClient() };
+      },
+      inject: [RedisManager],
+    }),
   ],
   providers: [
     UserService,
