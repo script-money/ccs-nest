@@ -23,7 +23,7 @@ test ORM with `yarn test:db`
 
 1. run redis, postgres and nginx containers in docker
 2. use `yarn prisma migrate reset` to initiate postgres (if need)
-3. config flow config at `src/config/testnet.ts` and `.env.testnet`
+3. prepare `.env`, `src/config/dapp-config.json` and `.env.testnet` files
 4. use `yarn start:testnet` to launch server
 5. use `yarn prisma studio` to check database in GUI (if need)
-6. use `yarn kill-port 7001` to close server (if need)
+6. use `pm2 start "yarn start:testnet --name ccs"` run on server
