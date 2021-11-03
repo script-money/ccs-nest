@@ -463,10 +463,14 @@ export const closeActivity = async (options: ICloseOptionsFromTask) => {
     },
   });
 
+  const newRecentAvgTotalPower =
+    recentActivities.reduce((acc, value) => acc + value.absTotalPower, 0) /
+    recentActivities.length;
+
   const votingRatio =
     factor.recentAvgTotalPower === 0
       ? 1
-      : absVotingPower / factor.recentAvgTotalPower;
+      : absVotingPower / newRecentAvgTotalPower;
   // console.log('votingRatio', votingRatio);
 
   // 3. according votingRatio, rewardParams in db and asymmetric curve algorithm, get tokenRatio
@@ -503,12 +507,6 @@ export const closeActivity = async (options: ICloseOptionsFromTask) => {
   });
 
   // 5. create new economicFactor's with new ballotPrice and recentAvgTotalPower
-  const newRecentAvgTotalPower =
-    recentActivities.reduce((acc, value) => acc + value.absTotalPower, 0) /
-    recentActivities.length;
-
-  // console.log('newRecentAvgTotalPower', newRecentAvgTotalPower);
-
   const recentTotalRewards = recentActivities.reduce(
     (acc, value) => acc + value.rewardToken,
     0,
