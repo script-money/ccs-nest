@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model BlockCursor {
+  id            Int      @id @default(autoincrement())
+  eventName     String
+  currentHeight Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model User {
+  name              String?
+  address           String              @id @unique
+  avatar            String?
+  discord           String?
+  flowns            String?
+  votingPower       Float               @default(0.01) @db.Real
+  activities        Activity[]
+  BallotBuyRecord   BallotBuyRecord[]
+  memorials         Memorial[]
+  TokenChangeRecord TokenChangeRecord[]
+  votes             Vote[]
+}
+
+model Activity {
+  id            Int                      @id @unique
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+  title         String                   @db.VarChar(255)
+  metadata      Json
+  creatorAddr   String
+  content       String?
+  startDate     DateTime?
+  endDate       DateTime?
+  source        String?
+  lockDate      DateTime?
+  upVote        Int?
+  downVote      Int?
+  closed        Boolean
+  rewardToken   Float?                   @db.Real
+  absTotalPower Float?                   @db.Real
+  bouns         Float?                   @db.Real
+  creator       User                     @relation(fields: [creatorAddr], references: [address])
+  categories    CategoriesOnActivities[]
+  memorials     Memorial[]
+  voteResult    Vote[]
+}
+
+model Category {
+  id         Int                      @id @default(autoincrement())
+  type       ActivityType             @unique
+  activities CategoriesOnActivities[]
+}
+
+model CategoriesOnActivities {
+  activityId Int
+  categoryId Int
+  activity   Activity @relation(fields: [activityId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@id([activityId, categoryId])
+}
+
+model Vote {
+  id         Int      @default(autoincrement())
+  voterAddr  String
+  isUpVote   Boolean  @default(true)
+  power      Float    @default(1.0) @db.Real
+  activityId Int
+  activity   Activity @relation(fields: [activityId], references: [id])
+  voter      User     @relation(fields: [voterAddr], references: [address])
+
+  @@unique([voterAddr, activityId])
+}
+
+model EconomicFactor {
+  id                  Int      @id @default(autoincrement())
+  createdAt           DateTime @default(now())
+  createConsumption   Float    @default(100.0) @db.Real
+  maxRatio            Float    @default(5.0) @db.Real
+  minRatio            Float    @default(1.0) @db.Real
+  averageRatio        Float    @default(1.5) @db.Real
+  asymmetry           Float    @default(2.0) @db.Real
+  recentN             Int      @default(10)
+  ballotPrice         Float    @default(1.0) @db.Real
+  ballotMinPrice      Float    @default(1.0) @db.Real
+  recentAvgTotalPower Float    @default(0.0) @db.Real
+  bounsRatio          Float    @default(0.01) @db.Real
+}
+
+model Memorial {
+  ownerAddress     String
+  id               Int      @id @unique
+  version          Int
+  seriesNumber     Int
+  circulatingCount Int
+  activityId       Int
+  mintedAt         DateTime @default(now())
+  isPositive       Boolean
+  bonus            Float    @db.Real
+  activity         Activity @relation(fields: [activityId], references: [id])
+  owner            User     @relation(fields: [ownerAddress], references: [address])
+}
+
+model BallotBuyRecord {
+  id           Int      @id @default(autoincrement())
+  amount       Int
+  buyerAddress String
+  price        Float    @db.Real
+  createdAt    DateTime @default(now())
+  buyer        User     @relation(fields: [buyerAddress], references: [address])
+}
+
+model TokenChangeRecord {
+  id          Int             @id @default(autoincrement())
+  createdAt   DateTime        @default(now())
+  type        TokenChangeType
+  amount      Float           @db.Real
+  userAddress String
+  comment     String?
+  user        User            @relation(fields: [userAddress], references: [address])
+}
+
+model Faucet {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  address   String
+}
+
+enum TokenChangeType {
+  BuyBallot
+  CreateActivity
+  RewardByActivity
+  Airdrop
+}
+
+enum ActivityType {
+  Interact
+  Form
+  Vote
+  Test
+  Node
+  Learn
+  Create
+  Develop
+  Whitelist
+  IXO
+  LuckDraw
+  Register
+  Airdrop
+}
