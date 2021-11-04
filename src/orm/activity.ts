@@ -203,7 +203,7 @@ export const getActivities = async ({
       take: limit,
       where: addJoinCondition,
       orderBy: {
-        updatedAt: 'desc',
+        createdAt: 'desc',
       },
       include: {
         creator: true,
