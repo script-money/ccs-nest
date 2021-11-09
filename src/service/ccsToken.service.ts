@@ -9,7 +9,6 @@ import {
   getHistory as getFacuetHistory,
   addFacuetRecord as addFacuetRecordToDB,
 } from '../orm/ccsToken';
-import { log } from 'console';
 
 @Injectable()
 export class CCSTokenService {

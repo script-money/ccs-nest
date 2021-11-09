@@ -1,11 +1,4 @@
-import {
-  ADMIN,
-  USER1,
-  USER2,
-  USER3,
-  USER4,
-  toUFix64,
-} from '../../src/orm/clientForTest';
+import { USER1, toUFix64 } from '../../src/orm/clientForTest';
 
 import { createBallotBought } from '../../src/orm/ballot';
 import { IBallotsBoughtFromEvent } from '../../src/interface/ballot';

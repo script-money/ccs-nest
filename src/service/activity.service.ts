@@ -55,6 +55,7 @@ export class ActivityService {
         };
       }
       if (!result.closed) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { voteResult, ...otherInfo } = result;
         return {
           success: true,

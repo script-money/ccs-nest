@@ -4,15 +4,8 @@ import {
   createVote,
   getActivity,
 } from '../../src/orm/activity';
-import {
-  ADMIN,
-  USER1,
-  USER2,
-  USER3,
-  USER4,
-  toUFix64,
-} from '../../src/orm/clientForTest';
-import * as moment from 'moment';
+import { USER1, USER2, toUFix64 } from '../../src/orm/clientForTest';
+import moment from 'moment';
 import {
   ICreateOptionsFromEvent,
   IVotedOptionsFromEvent,

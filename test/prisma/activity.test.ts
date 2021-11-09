@@ -10,20 +10,18 @@ import {
   rewardParameterUpdated,
 } from '../../src/orm/activity';
 import {
-  ADMIN,
   USER1,
   USER2,
   USER3,
   USER4,
   toUFix64,
 } from '../../src/orm/clientForTest';
-import * as moment from 'moment';
+import moment from 'moment';
 import {
   IConsumptionUpdatedFromEvent,
   ICreateOptionsFromEvent,
   IVotedOptionsFromEvent,
   IRewardParameterUpdatedFromEvent,
-  RewardParameter,
   userValidActivityTypeEnum,
 } from '../../src/interface/activity';
 import { createMemorial } from '../../src/orm/momerials';

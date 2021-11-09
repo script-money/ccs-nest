@@ -350,6 +350,7 @@ export const createVote = async (eventData: IVotedOptionsFromEvent) => {
 export const consumptionUpdated = async (
   evendata: IConsumptionUpdatedFromEvent,
 ) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, createdAt, ...factorProps } =
     await prisma.economicFactor.findFirst({
       orderBy: { id: 'asc' },
@@ -370,6 +371,7 @@ export const consumptionUpdated = async (
 export const rewardParameterUpdated = async (
   evendata: IRewardParameterUpdatedFromEvent,
 ) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, createdAt, ...factorProps } =
     await prisma.economicFactor.findFirst({
       orderBy: { id: 'desc' },
@@ -424,6 +426,7 @@ export const closeActivity = async (options: ICloseOptionsFromTask) => {
 
   if (activity.closed) return;
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, ...factor } = await prisma.economicFactor.findFirst({
     orderBy: { id: 'desc' },
   });
