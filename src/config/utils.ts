@@ -12,7 +12,8 @@ export default {
     if (process.env.NODE_ENV === 'testnet') {
       fcl
         .config()
-        .put('accessNode.api', 'https://access-testnet.onflow.org')
+        .put('grpc.metadata', { api_key: process.env.ALCHEMY_API_KEY })
+        .put('accessNode.api', 'https://flow-testnet.g.alchemy.com')
         .put(
           'discovery.wallet',
           'https://fcl-discovery.onflow.org/testnet/authn',
