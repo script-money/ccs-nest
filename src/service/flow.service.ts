@@ -5,12 +5,14 @@ import { join } from 'path';
 import { SHA3 } from 'sha3';
 const ec: EC = new EC('p256');
 import {
+  Account,
   Address,
   Event,
   flowInteractOptions,
   FlowTxData,
   GetEventsOptions,
   Key,
+  signable,
 } from '../interface/flow';
 import { BlockCursorService } from './blockCursor.service';
 import { Inject, Injectable, CACHE_MANAGER, forwardRef } from '@nestjs/common';
@@ -61,7 +63,7 @@ export class FlowService {
     if (keyToUse === undefined) {
       return;
     }
-    return async (account: any = {}) => {
+    return async (account: Account) => {
       const user = await this.getAccount(this.minterFlowAddress);
       const keyId = keyToUse.keyId;
 
@@ -86,6 +88,7 @@ export class FlowService {
 
   async getAccount(addr: string) {
     const { account } = await fcl.send([fcl.getAccount(addr)]);
+    console.log('getAccount', account);
     return account;
   }
 
@@ -100,6 +103,16 @@ export class FlowService {
     const s = sig.s.toArrayLike(Buffer, 'be', n);
     return Buffer.concat([r, s]).toString('hex');
   };
+
+  private async getFreeKey() {
+    const seqNumberValue = await this.cacheManager.get('seqNumber');
+    const seqNumber = seqNumberValue ? Number(seqNumberValue) : 0;
+    const keyIndexToUse = seqNumber % this.minterKeys.length;
+    console.log('keyIndexToUse:', keyIndexToUse);
+    const keyToUse = this.minterKeys[keyIndexToUse];
+    await this.cacheManager.set('seqNumber', seqNumber + 1);
+    return keyToUse;
+  }
 
   async sendTx({
     transaction,
@@ -134,15 +147,8 @@ export class FlowService {
 
   async sendTxByAdmin(option: flowInteractOptions) {
     console.log('option', option);
-
-    const seqNumberValue = await this.cacheManager.get('seqNumber');
-    const seqNumber = seqNumberValue ? Number(seqNumberValue) : 0;
-    const keyIndexToUse = seqNumber % this.minterKeys.length;
-    console.log('keyIndexToUse:', keyIndexToUse);
-    const keyToUse = this.minterKeys[keyIndexToUse];
-    await this.cacheManager.set('seqNumber', seqNumber + 1);
+    const keyToUse = await this.getFreeKey();
     const authorization = this.authorizeMinter(keyToUse);
-
     let transaction;
     const filePath = join(
       __dirname,
@@ -219,4 +225,42 @@ export class FlowService {
       throw new Error(error);
     }
   }
+
+  TPSAccountResolver = async (account: Account) => {
+    const tpsPayerAddress = this.minterFlowAddress;
+    const tpsPayerKeyID = (await this.getFreeKey()).keyId;
+    const tpsTempID = `${tpsPayerAddress}-${tpsPayerKeyID}`;
+    return {
+      ...account,
+      tempId: tpsTempID,
+      addr: tpsPayerAddress,
+      keyId: tpsPayerKeyID,
+    };
+  };
+
+  TPSSigner = async (signable: signable) => {
+    const signablePayerAddress = signable.voucher.payer;
+    // For security, ensure that `signablePayerAddress` is not specified as a transaction authorizer or proposer.
+    if (signable.voucher.authorizers.includes(signablePayerAddress)) {
+      throw new Error(
+        `TPSSigner Error: signablePayerAddress=${signablePayerAddress} specified as a transaction authorizer in transaction signable.`,
+      );
+    }
+    if (signable.voucher.proposalKey.address === signablePayerAddress) {
+      throw new Error(
+        `TPSSigner Error: signablePayerAddress=${signablePayerAddress} specified as the transaction proposer in transaction signable.`,
+      );
+    }
+    const encodedMessage = fcl.WalletUtils.encodeMessageFromSignable(
+      signable,
+      this.minterFlowAddress,
+    );
+    const keyToUse = await this.getFreeKey();
+    const signature = this.signWithKey(keyToUse.privateKey, encodedMessage);
+    return {
+      addr: signablePayerAddress,
+      keyId: keyToUse.keyId,
+      signature,
+    };
+  };
 }

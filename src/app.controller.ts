@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   Inject,
@@ -15,10 +16,12 @@ import {
   IModifyOptions,
 } from './interface/activity';
 import { IRequestFreeTokenResponse } from './interface/ccsToken';
+import { Account } from './interface/flow';
 import { IGetMemorialsResponse } from './interface/momerials';
 import { IGetUserResponse } from './interface/user';
 import { ActivityService } from './service/activity.service';
 import { CCSTokenService } from './service/ccsToken.service';
+import { FlowService } from './service/flow.service';
 import { MemorialsService } from './service/memorials.service';
 import { UserService } from './service/user.service';
 
@@ -31,6 +34,7 @@ export class AppController {
     private readonly memorialsService: MemorialsService,
     @Inject(CCSTokenService)
     private readonly ccsTokenService: CCSTokenService,
+    @Inject(FlowService) private readonly flowService: FlowService,
   ) {}
   // user
   @Get('/user/:address')
@@ -78,5 +82,17 @@ export class AppController {
   ): Promise<IGetMemorialsResponse> {
     const result = await this.memorialsService.queryMany(queryOption);
     return result;
+  }
+
+  @Post('/resolve-account')
+  async resolveaccount(@Body() account: Account): Promise<Account> {
+    const resolveaccount = await this.flowService.TPSAccountResolver(account);
+    return resolveaccount;
+  }
+
+  @Post('/sign')
+  async sign(@Body() signable: any) {
+    const compositeSignature = await this.flowService.TPSSigner(signable);
+    return compositeSignature;
   }
 }

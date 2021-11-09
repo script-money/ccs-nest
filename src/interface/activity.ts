@@ -10,6 +10,10 @@ export interface ICreateOptionsFromEvent {
   creator: Address;
 }
 
+export interface activityCreateEvent {
+  data: ICreateOptionsFromEvent;
+}
+
 export interface IVotedOptionsFromEvent {
   id: UInt64;
   voter: Address;

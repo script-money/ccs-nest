@@ -1,5 +1,3 @@
-import { ICreateOptionsFromEvent } from './activity';
-
 export interface Event {
   blockId: Hash;
   blockHeight: number;
@@ -16,10 +14,6 @@ export interface GetEventsOptions {
   contractName: string;
   eventName: string;
   endBlock: number;
-}
-
-export interface activityCreateEvent {
-  data: ICreateOptionsFromEvent;
 }
 
 export interface flowInteractOptions {
@@ -45,6 +39,55 @@ export interface compositeSignature extends FclBase {
   signature: string; // Signature as a hex string
 }
 
+export interface signable extends FclBase {
+  f_type: 'Signable';
+  message: string;
+  addr: Address;
+  keyId: number;
+  roles: Role;
+  cadence: string;
+  args: { type: string; value: string }[];
+  data: Record<string, unknown>;
+  interaction: {
+    tag: 'TRANSACTION';
+    assigns: Record<string, unknown>;
+    status: 'OK';
+    reason: null;
+    accounts: any;
+    params: Record<string, unknown>;
+    arguments: { string: [Record<string, unknown>] };
+    message: {
+      cadence: string;
+      refBlock: Hash;
+      computeLimit: number;
+      proposer: null | string;
+      payer: null | string;
+      authorizations: [];
+      params: [];
+      arguments: [Array<any>];
+    };
+    proposer: string;
+    authorizations: string[];
+    payer: string;
+    events: { eventType: null; start: null; end: null; blockIds: [] };
+    transaction: { id: null };
+    block: { id: null; height: null; isSealed: null };
+    account: { addr: null };
+    collection: { id: null };
+  };
+  voucher: {
+    cadence: string;
+    refBlock: Hash;
+    computeLimit: number;
+    arguments: [[any]];
+    proposalKey: { address: Address; keyId: number; sequenceNum: number };
+    payer: Address;
+    authorizers: Address[];
+    payloadSigs: [[any]];
+    envelopeSigs: [[any]];
+  };
+}
+
 export interface Key {
   publicKey: string;
   privateKey: string;
@@ -52,6 +95,40 @@ export interface Key {
   weight: number;
 }
 
+export interface Account {
+  kind: 'ACCOUNT';
+  tempId: string;
+  addr: Address;
+  keyId: number;
+  sequenceNum: number | null;
+  signature: string | null;
+  signingFunction: (signable: string) => compositeSignature;
+  resolve: () => Promise<any>;
+  role: Role;
+}
+
+export interface Role {
+  proposer: boolean;
+  authorizer: boolean;
+  payer: boolean;
+  param: boolean;
+}
+
+export interface WalletAccount {
+  address: string;
+  balance: number;
+  code: string;
+  keys: {
+    index: number;
+    publicKey: string;
+    revoked: boolean;
+    signAlgo: number;
+    hashAlgo: number;
+    weight: number;
+  }[];
+}
+
+export type authorizationFunction = (account: Account) => Account;
 export type Address = string;
 export type UFix64 = string; // flow's UFix64 in fcl is string
 export type UInt64 = number;
