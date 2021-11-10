@@ -88,7 +88,6 @@ export class FlowService {
 
   async getAccount(addr: string) {
     const { account } = await fcl.send([fcl.getAccount(addr)]);
-    console.log('getAccount', account);
     return account;
   }
 
@@ -106,10 +105,15 @@ export class FlowService {
 
   private async getFreeKey() {
     const seqNumberValue = await this.cacheManager.get('seqNumber');
-    const seqNumber = seqNumberValue ? Number(seqNumberValue) : 0;
-    const keyIndexToUse = seqNumber % this.minterKeys.length;
-    console.log('keyIndexToUse:', keyIndexToUse);
-    const keyToUse = this.minterKeys[keyIndexToUse];
+    let seqNumber = seqNumberValue ? Number(seqNumberValue) : 0;
+    let keyIndexToUse = seqNumber % this.minterKeys.length;
+    let keyToUse = this.minterKeys[keyIndexToUse];
+    while (keyToUse.revoked) {
+      seqNumber++;
+      keyIndexToUse++;
+      keyToUse = this.minterKeys[keyIndexToUse];
+    }
+    console.log('keyToUse', keyToUse);
     await this.cacheManager.set('seqNumber', seqNumber + 1);
     return keyToUse;
   }
@@ -228,13 +232,13 @@ export class FlowService {
 
   TPSAccountResolver = async (account: Account) => {
     const tpsPayerAddress = this.minterFlowAddress;
-    const tpsPayerKeyID = (await this.getFreeKey()).keyId;
+    const tpsPayerKeyID = 0;
     const tpsTempID = `${tpsPayerAddress}-${tpsPayerKeyID}`;
     return {
       ...account,
       tempId: tpsTempID,
       addr: tpsPayerAddress,
-      keyId: tpsPayerKeyID,
+      keyId: 0,
     };
   };
 
@@ -255,7 +259,7 @@ export class FlowService {
       signable,
       this.minterFlowAddress,
     );
-    const keyToUse = await this.getFreeKey();
+    const keyToUse = this.minterKeys[0];
     const signature = this.signWithKey(keyToUse.privateKey, encodedMessage);
     return {
       addr: signablePayerAddress,

@@ -89,10 +89,11 @@ export interface signable extends FclBase {
 }
 
 export interface Key {
-  publicKey: string;
-  privateKey: string;
+  publicKey?: string;
+  privateKey?: string;
   keyId: number;
   weight: number;
+  revoked?: boolean;
 }
 
 export interface Account {

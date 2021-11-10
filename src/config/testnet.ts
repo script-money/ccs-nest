@@ -16,20 +16,48 @@ const minterKeys = [
   {
     publicKey: process.env.PUBLICKEY_0,
     privateKey: process.env.PRIVATEKEY_0,
-    keyId: process.env.KEYINDEX_0,
+    keyId: 0,
     weight: 1000,
+    revoked: false,
   },
   {
-    publicKey: process.env.PUBLICKEY_1,
-    privateKey: process.env.PRIVATEKEY_1,
-    keyId: process.env.KEYINDEX_1,
+    keyId: 1,
     weight: 1000,
+    revoked: true,
   },
   {
-    publicKey: process.env.PUBLICKEY_2,
-    privateKey: process.env.PRIVATEKEY_2,
-    keyId: process.env.KEYINDEX_2,
+    keyId: 2,
     weight: 1000,
+    revoked: true,
+  },
+  {
+    keyId: 3,
+    weight: 0,
+    revoked: true,
+  },
+  {
+    keyId: 4,
+    weight: 0,
+    revoked: true,
+  },
+  {
+    keyId: 5,
+    weight: 0,
+    revoked: true,
+  },
+  {
+    publicKey: process.env.PUBLICKEY_6,
+    privateKey: process.env.PRIVATEKEY_6,
+    keyId: 6,
+    weight: 1000,
+    revoked: false,
+  },
+  {
+    publicKey: process.env.PUBLICKEY_7,
+    privateKey: process.env.PRIVATEKEY_7,
+    keyId: 7,
+    weight: 1000,
+    revoked: false,
   },
 ];
 
