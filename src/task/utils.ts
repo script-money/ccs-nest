@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { BlockCursorService } from '../service/blockCursor.service';
 import { FlowService } from '../service/flow.service';
 import * as fcl from '@onflow/fcl';
@@ -10,6 +10,8 @@ export const LONG_INTERVAL = '0 0 * * *'; // every day 0:00
 
 @Injectable()
 export class TaskUtils {
+  private readonly logger = new Logger(TaskUtils.name);
+
   constructor(
     @Inject(BlockCursorService)
     private readonly blockCursorService: BlockCursorService,
@@ -41,7 +43,7 @@ export class TaskUtils {
 
     if (!lastBlock) {
       lastBlock = await this.flowService.getLatestBlockHeight();
-      console.log(`newest blockheight is ${lastBlock}`);
+      this.logger.log(`Get ${eventName} newest blockheight is ${lastBlock}`);
     }
     const interval = lastBlock - initStartBlock;
 
@@ -54,7 +56,9 @@ export class TaskUtils {
 
     const epoch = Math.floor(interval / queryBlockRange);
     if (epoch === 0) {
-      console.log(`${eventName} interval is ${interval}, wait for next query`);
+      this.logger.log(
+        `${eventName} interval is ${interval}, wait for next query`,
+      );
       return;
     }
 
@@ -74,7 +78,10 @@ export class TaskUtils {
 
           if (result !== undefined && result.length !== 0) {
             result.forEach(async (event: Event) => {
-              console.log(`save ${ormFunction.name} event to db`, event.data);
+              this.logger.log(
+                `save ${ormFunction.name} event to db`,
+                event.data,
+              );
               await ormFunction(event.data);
             });
           }

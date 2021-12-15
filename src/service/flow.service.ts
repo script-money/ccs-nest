@@ -15,7 +15,13 @@ import {
   signable,
 } from '../interface/flow';
 import { BlockCursorService } from './blockCursor.service';
-import { Inject, Injectable, CACHE_MANAGER, forwardRef } from '@nestjs/common';
+import {
+  Logger,
+  Inject,
+  Injectable,
+  CACHE_MANAGER,
+  forwardRef,
+} from '@nestjs/common';
 import { ConfigService } from 'nestjs-config';
 import { Cache } from 'cache-manager';
 
@@ -36,6 +42,7 @@ export class FlowService {
   private ccsToken: Address;
   private nonFungibleToken: Address;
   private memorials: Address;
+  private readonly logger = new Logger(FlowService.name);
 
   constructor(
     private readonly config: ConfigService,
@@ -56,7 +63,7 @@ export class FlowService {
     fcl
       .config()
       .get('accessNode.api')
-      .then((d: string) => console.log('Flow Connect to', d));
+      .then((d: string) => this.logger.log('Flow Connect to', d));
   }
 
   authorizeMinter(keyToUse: Key) {
@@ -113,7 +120,7 @@ export class FlowService {
       keyIndexToUse++;
       keyToUse = this.minterKeys[keyIndexToUse];
     }
-    console.log('keyToUse', keyToUse);
+    this.logger.log('keyToUse', keyToUse);
     await this.cacheManager.set('seqNumber', seqNumber + 1);
     return keyToUse;
   }
@@ -150,7 +157,7 @@ export class FlowService {
   }
 
   async sendTxByAdmin(option: flowInteractOptions) {
-    console.log('option', option);
+    this.logger.log('option', option);
     const keyToUse = await this.getFreeKey();
     const authorization = this.authorizeMinter(keyToUse);
     let transaction;
@@ -199,7 +206,7 @@ export class FlowService {
 
     if (savedCursor.currentHeight + 1 >= endBlock) return;
 
-    console.log(
+    this.logger.log(
       `query ${key} from ${savedCursor.currentHeight + 1} to ${endBlock}`,
     );
 
@@ -219,8 +226,10 @@ export class FlowService {
       );
       return events;
     } catch (error) {
-      console.warn(
-        `get Range error ${savedCursor.currentHeight + 1} to ${endBlock}`,
+      this.logger.warn(
+        // eslint-disable-next-line prettier/prettier
+        `get Range error ${error} at ${savedCursor.currentHeight + 1
+        } to ${endBlock} when process ${eventName}  `,
       );
       await this.blockCursorService.updateBlockCursorById(
         savedCursor.id,

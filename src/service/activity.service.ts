@@ -1,4 +1,4 @@
-import { Injectable, HttpStatus, Inject } from '@nestjs/common';
+import { Injectable, HttpStatus, Inject, Logger } from '@nestjs/common';
 import { ActivitiesGetDTO } from '../dto/activity';
 import {
   IGetActivitiesResponse,
@@ -18,6 +18,8 @@ import { FlowService } from './flow.service';
 
 @Injectable()
 export class ActivityService {
+  private readonly logger = new Logger(ActivityService.name);
+
   constructor(@Inject(FlowService) private readonly flowService: FlowService) {}
 
   async queryMany(options: ActivitiesGetDTO): Promise<IGetActivitiesResponse> {
@@ -124,7 +126,7 @@ export class ActivityService {
   async close(intervalMinutes: number): Promise<IGetActivityResponse> {
     const activityIDs = await getActivitiesToClose(intervalMinutes);
     if (activityIDs === null) {
-      console.log('No activities to close...');
+      this.logger.log('No activities to close...');
       return;
     }
     for await (const activityID of activityIDs) {
@@ -133,7 +135,7 @@ export class ActivityService {
           id: activityID.id,
         });
         for (const txArg of txArgList) {
-          console.log('txArg', txArg);
+          this.logger.log('txArg', txArg);
           const result = await this.flowService.sendTxByAdmin(txArg);
           if (result !== undefined) await fcl.tx(result).onceSealed();
         }
