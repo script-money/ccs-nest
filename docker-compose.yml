@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  ccs-nest:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ccs-nest
+    restart: always
+    ports:
+      - 7001:7001
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env
+      - .env.testnet
+
+  postgres:
+    image: postgres:latest
+    container_name: ccs-postgres
+    restart: always
+    env_file:
+      - .env
+
+  redis:
+    image: redis:latest
+    container_name: ccs-redis
+    restart: always
+    environment:
+      REDIS_PASSWORD: ''
+
+networks:
+  ccs-network:

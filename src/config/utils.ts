@@ -22,7 +22,7 @@ export default {
   },
   redisServer() {
     return {
-      host: 'localhost',
+      host: 'redis', // 'redis' in docker, 'localhost' at local environment
       port: '6379',
       db: 3,
       password: '',
