@@ -1,4 +1,10 @@
-import { Injectable, HttpStatus, Inject, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  HttpStatus,
+  Inject,
+  Logger,
+  forwardRef,
+} from '@nestjs/common';
 import { ActivitiesGetDTO } from '../dto/activity';
 import {
   IGetActivitiesResponse,
@@ -15,12 +21,18 @@ import {
 } from '../orm/activity';
 import * as fcl from '@onflow/fcl';
 import { FlowService } from './flow.service';
+import { ActivityTask } from 'src/task/activity';
+import { IResponse } from 'src/interface/utils';
 
 @Injectable()
 export class ActivityService {
   private readonly logger = new Logger(ActivityService.name);
 
-  constructor(@Inject(FlowService) private readonly flowService: FlowService) {}
+  constructor(
+    @Inject(FlowService) private readonly flowService: FlowService,
+    @Inject(forwardRef(() => ActivityTask))
+    private readonly activityTask: ActivityTask,
+  ) {}
 
   async queryMany(options: ActivitiesGetDTO): Promise<IGetActivitiesResponse> {
     try {
@@ -143,6 +155,37 @@ export class ActivityService {
         console.error(`close activiy ${activityID.id} error:`, error);
         continue;
       }
+    }
+  }
+
+  async parameterUpdate(privateKey: string): Promise<IResponse> {
+    if (
+      !this.flowService.minterKeys.some((key) => key.privateKey === privateKey)
+    ) {
+      return {
+        success: false,
+        data: null,
+        errorCode: HttpStatus.NOT_ACCEPTABLE,
+        errorMessage: `You should use admin key to update parameter`,
+        showType: 1,
+      };
+    }
+
+    try {
+      await this.activityTask.parameterUpdate();
+      return {
+        success: true,
+        data: 'Parameter update success or not modify',
+      };
+    } catch (error) {
+      this.logger.error('parameterUpdate services', error);
+      return {
+        success: false,
+        data: null,
+        errorCode: HttpStatus.NOT_MODIFIED,
+        errorMessage: `You can't update parameter`,
+        showType: 1,
+      };
     }
   }
 }

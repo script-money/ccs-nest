@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
-import { LONG_INTERVAL, TaskUtils } from './utils';
+import { TaskUtils } from './utils';
 import { ConfigService } from 'nestjs-config';
 
 import { tokenAirdrop } from 'src/orm/ccsToken';
@@ -24,15 +23,14 @@ export class CCSTokenTask {
   ) {
     const env = config._env();
     this.contractName = 'CCSToken';
-    this.contractAddr = config.get(`${env}.ccsTokenContract`);
+    this.contractAddr = config.get(`${env}.ccsToken`);
     this.maxRangeQueryBlock = config.get(`${env}.maxRangeQueryBlock`);
     this.defaultRedisClient.del(':lock:ccsTokensAirdrop');
   }
 
-  @Cron(LONG_INTERVAL) // every day
   @RedisLock('ccsTokensAirdrop', 24 * 60 * 60 * 1000) // 1 day release lock
   async ccsTokensAirdrop() {
-    await this.taskUtils.saveEventsToDB(
+    await this.taskUtils.saveLastEventToDB(
       this.contractAddr,
       this.contractName,
       'TokenAirdrop',

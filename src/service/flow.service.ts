@@ -35,7 +35,7 @@ const MemorialsPath = '"../../contracts/Memorials.cdc"';
 @Injectable()
 export class FlowService {
   private minterFlowAddress: Address;
-  private minterKeys: Key[];
+  public minterKeys: Key[];
   private fungibleToken: Address;
   private activityContract: Address;
   private ballotContract: Address;

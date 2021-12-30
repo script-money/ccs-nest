@@ -1,11 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import {
-  LONG_INTERVAL,
-  MID_INTERVAL,
-  SHORT_INTERVAL,
-  TaskUtils,
-} from './utils';
+import { MID_INTERVAL, SHORT_INTERVAL, TaskUtils } from './utils';
 import { ConfigService } from 'nestjs-config';
 import {
   closeActivity,
@@ -34,7 +29,8 @@ export class ActivityTask {
     protected readonly config: ConfigService,
     protected readonly lockService: RedisLockService,
     @InjectRedis() private readonly defaultRedisClient: Redis,
-    @Inject(ActivityService) private readonly activityService: ActivityService,
+    @Inject(forwardRef(() => ActivityService))
+    private readonly activityService: ActivityService,
     @Inject(TaskUtils) private readonly taskUtils: TaskUtils,
   ) {
     const env = config._env();
@@ -80,10 +76,9 @@ export class ActivityTask {
     );
   }
 
-  @Cron(LONG_INTERVAL)
   @RedisLock('parameterUpdate', 24 * 60 * 60 * 1000) // 1 day release lock
   async parameterUpdate() {
-    const lastBlock = await this.taskUtils.saveEventsToDB(
+    await this.taskUtils.saveLastEventToDB(
       this.contractAddr,
       this.contractName,
       'consumptionUpdated',
@@ -91,13 +86,12 @@ export class ActivityTask {
       this.maxRangeQueryBlock,
     );
 
-    await this.taskUtils.saveEventsToDB(
+    await this.taskUtils.saveLastEventToDB(
       this.contractAddr,
       this.contractName,
       'rewardParameterUpdated',
       rewardParameterUpdated,
       this.maxRangeQueryBlock,
-      lastBlock,
     );
   }
 

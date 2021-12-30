@@ -19,6 +19,7 @@ import { IRequestFreeTokenResponse } from './interface/ccsToken';
 import { Account } from './interface/flow';
 import { IGetMemorialsResponse } from './interface/momerials';
 import { IGetUserResponse } from './interface/user';
+import { IResponse } from './interface/utils';
 import { ActivityService } from './service/activity.service';
 import { CCSTokenService } from './service/ccsToken.service';
 import { FlowService } from './service/flow.service';
@@ -66,12 +67,24 @@ export class AppController {
     return result;
   }
 
+  @Post('/activity/parameterUpdate')
+  async updateParameters(@Query('key') key: string): Promise<IResponse> {
+    const result = await this.activityService.parameterUpdate(key);
+    return result;
+  }
+
   // token
   @Post('/token/free')
   async requestFreeToken(
     @Query() option: { address: string },
   ): Promise<IRequestFreeTokenResponse> {
     const result = await this.ccsTokenService.requestFree(option.address);
+    return result;
+  }
+
+  @Post('/token/airdropUpdate')
+  async updateAirdrop(@Query('key') key: string): Promise<IResponse> {
+    const result = await this.ccsTokenService.airdropUpdate(key);
     return result;
   }
 

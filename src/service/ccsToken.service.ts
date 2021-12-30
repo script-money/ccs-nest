@@ -1,4 +1,10 @@
-import { Injectable, HttpStatus, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  HttpStatus,
+  Inject,
+  forwardRef,
+  Logger,
+} from '@nestjs/common';
 import * as fcl from '@onflow/fcl';
 import * as t from '@onflow/types';
 import { ConfigService } from 'nestjs-config';
@@ -9,13 +15,19 @@ import {
   getHistory as getFacuetHistory,
   addFacuetRecord as addFacuetRecordToDB,
 } from '../orm/ccsToken';
+import { CCSTokenTask } from 'src/task/ccsToken';
+import { IResponse } from 'src/interface/utils';
 
 @Injectable()
 export class CCSTokenService {
+  private readonly logger = new Logger(CCSTokenService.name);
+
   facuetAmount: number;
   constructor(
     private readonly config: ConfigService,
     @Inject(FlowService) private readonly flowService: FlowService,
+    @Inject(forwardRef(() => CCSTokenTask))
+    private readonly ccsTokenTask: CCSTokenTask,
   ) {
     this.facuetAmount = config.get(`${config._env()}.facuetAmount`);
   }
@@ -56,6 +68,36 @@ export class CCSTokenService {
         data: null,
         errorCode: HttpStatus.ACCEPTED,
         errorMessage: error.toString().split('\n')[0],
+        showType: 1,
+      };
+    }
+  }
+
+  async airdropUpdate(privateKey: string): Promise<IResponse> {
+    if (
+      !this.flowService.minterKeys.some((key) => key.privateKey === privateKey)
+    ) {
+      return {
+        success: false,
+        data: null,
+        errorCode: HttpStatus.NOT_ACCEPTABLE,
+        errorMessage: `You should use admin key to update parameter`,
+        showType: 1,
+      };
+    }
+
+    try {
+      await this.ccsTokenTask.ccsTokensAirdrop();
+      return {
+        success: true,
+        data: 'airdrop sync success or not modify',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        data: null,
+        errorCode: HttpStatus.NOT_MODIFIED,
+        errorMessage: `You can't update airdrop info: ${error}`,
         showType: 1,
       };
     }
