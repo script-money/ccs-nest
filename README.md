@@ -12,7 +12,7 @@ The server side is responsible for
 
 1. copy .cdc files from cadence folder `rsync -av --progress ../cadence/ cadence/ --exclude .git/ --exclude tests/`
 2. launch postgres `docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=ccs -p 5432:5432 -d postgres`
-3. create .env like `DATABASE_URL="mysql://USER:PASSWORD@HOST:PORT/DATABASE"` to connect postgres
+3. create .env like `DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/DATABASE"` to connect postgres
 4. `yarn prisma migrate dev --name initial` to generate prisma client files
 
 ## how to test ORM
@@ -29,22 +29,23 @@ test ORM with `yarn test:db`
 
 ## how to run local testnet development environment
 
-1. run redis, postgres in docker
+1. run redis, postgres in docker,`docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=ccs -p 5432:5432 -d postgres` and `docker run --name redis -p 6379:6379 -d redis`
 2. use `yarn prisma migrate reset` to initiate postgres (if need)
-3. prepare `.env` and `.env.testnet` files
+3. prepare `.env` and `.env.testnet` files, scp `dapp-config.json` to src/config
 4. use `yarn start:testnet` to launch server
 5. use `yarn prisma studio` to check database in GUI (if need)
-6. use `pm2 start "yarn start:testnet --name ccs"` run on server
+6. use `pm2 start "yarn start:testnet" --name nest` run on server
 
 ## how to run deploy to docker environment
 
 1. change localhost:5432 in .env to postgres:5432
 2. change src/config/utils line 25 localhost to redis
-3. use `docker-compose up`
+3. use `docker-compose up -d`
+4. `docker-compose up -d --no-deps --build` if need rebuild
 
 ## how to backup data and restore
 
 1. Backup: At server, run
    `docker exec ccs-postgres /bin/bash -c "PGPASSWORD=PASSWORD pg_dump --username postgres --clean ccs" > ~/backup/$(date +%Y%m%d).sql`
 2. Download: `scp ccs:~/backup/$(date +%Y%m%d).sql ./data_backup/` , ccs is server alias
-3. Restore: `docker exec ccs-postgres /bin/bash -c "PGPASSWORD=PASSWORD psql --username postgres -d ccs" < ./data_backup/$(date +%Y%m%d).sql`
+3. Restore: `cat ~/ccs/data_backup/$(date +%Y%m%d).sql | docker exec -i postgres psql -U postgres -d ccs`
