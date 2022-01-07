@@ -95,7 +95,8 @@ export class ActivityService {
 
   async updateOne(options: IModifyOptions): Promise<IGetActivityResponse> {
     const { id, message, compositeSignatures } = options;
-    const isValid = await fcl.verifyUserSignature(message, compositeSignatures);
+    const MSG = Buffer.from(message).toString('hex');
+    const isValid = await fcl.verifyUserSignatures(MSG, compositeSignatures);
     if (!isValid) {
       return {
         success: false,

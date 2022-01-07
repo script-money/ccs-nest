@@ -61,9 +61,9 @@ export class AppController {
 
   @Put('/activity')
   async updateActivity(
-    @Query() queryOptions: IModifyOptions,
+    @Body() updateOptions: IModifyOptions,
   ): Promise<IGetActivityResponse> {
-    const result = await this.activityService.updateOne(queryOptions);
+    const result = await this.activityService.updateOne(updateOptions);
     return result;
   }
 
