@@ -13,3 +13,11 @@ export interface IUserService {
 export interface IAddUserFromEvent {
   address: Address;
 }
+
+export interface IUpdateUserFromDiscord {
+  address: string;
+  id: string;
+  username: string;
+  avatar: string;
+  discriminator: string; // such as 0001
+}

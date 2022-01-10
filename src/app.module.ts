@@ -17,6 +17,8 @@ import { BallotTask } from './task/ballot';
 import { MemorialsTask } from './task/memorials';
 import { RedisManager, RedisModule } from '@liaoliaots/nestjs-redis';
 import { RedisLockModule } from '@huangang/nestjs-simple-redis-lock';
+import { HttpModule } from '@nestjs/axios';
+import { DiscordService } from './service/discord.service';
 
 const ENV = process.env.NODE_ENV;
 
@@ -40,6 +42,14 @@ const ENV = process.env.NODE_ENV;
       },
       inject: [RedisManager],
     }),
+    HttpModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        timeout: configService.get('HTTP_TIMEOUT'),
+        maxRedirects: configService.get('HTTP_MAX_REDIRECTS'),
+      }),
+      inject: [ConfigService],
+    }),
   ],
   providers: [
     UserService,
@@ -54,6 +64,7 @@ const ENV = process.env.NODE_ENV;
     BallotTask,
     CCSTokenTask,
     MemorialsTask,
+    DiscordService,
   ],
   controllers: [AppController],
 })

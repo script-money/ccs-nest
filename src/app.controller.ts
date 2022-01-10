@@ -25,6 +25,8 @@ import { CCSTokenService } from './service/ccsToken.service';
 import { FlowService } from './service/flow.service';
 import { MemorialsService } from './service/memorials.service';
 import { UserService } from './service/user.service';
+import { DiscordService } from './service/discord.service';
+import { UserUpdateDiscordDTO } from './dto/user';
 
 @Controller('api')
 export class AppController {
@@ -36,6 +38,7 @@ export class AppController {
     @Inject(CCSTokenService)
     private readonly ccsTokenService: CCSTokenService,
     @Inject(FlowService) private readonly flowService: FlowService,
+    @Inject(DiscordService) private readonly discordService: DiscordService,
   ) {}
   // user
   @Get('/user/:address')
@@ -107,5 +110,12 @@ export class AppController {
   async sign(@Body() signable: any) {
     const compositeSignature = await this.flowService.TPSSigner(signable);
     return compositeSignature;
+  }
+
+  @Get('/user/update-discord')
+  async updateUserDiscordInfo(
+    @Query() params: UserUpdateDiscordDTO,
+  ): Promise<IResponse> {
+    return await this.discordService.updateDiscordInfo(params);
   }
 }
