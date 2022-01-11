@@ -21,11 +21,12 @@ test ORM with `yarn test:db`
 
 ## how to run local emulator environment
 
-1. run **redis**, **postgres** containers in docker
-2. run `cd ../dappstarter && yarn dev` as blockchain
-3. make sure **localhost**:5432 in .env
-4. use `yarn prisma migrate reset` to initiate postgres
-5. `yarn start:local` to launch server
+1. run **redis**, **postgres**, **flow-dev-wallet**containers in docker2
+2. run local wallet by `sh runLocalWallet.sh`
+3. run `cd ../dappstarter && yarn dev` as blockchain
+4. make sure **localhost**:5432 in .env and localhost of redis setting in `src/config/utils.ts`
+5. use `yarn prisma migrate reset` to initiate postgres
+6. `yarn start:local` to launch server
 
 ## how to run local testnet development environment
 
