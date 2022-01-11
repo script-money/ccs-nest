@@ -42,7 +42,7 @@
     "@onflow/types": "^0.0.5",
     "@prisma/client": "^3.3.0",
     "cache-manager": "^3.4.4",
-    "class-transformer": "^0.4.0",
+    "class-transformer": "<=0.4.0",
     "class-validator": "^0.13.1",
     "elliptic": "^6.5.4",
     "ioredis": "^4.28.0",
