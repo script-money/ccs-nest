@@ -252,6 +252,18 @@ export const modifyMetadata = async (
   if (oldActivity?.metadata && typeof oldActivity?.metadata === 'object') {
     const oldMetadata = oldActivity?.metadata as Prisma.JsonObject;
     const combineData = Object.assign({}, oldMetadata, newMetadata);
+
+    let endDate = undefined;
+    if (combineData.endDate !== undefined && combineData.endDate !== null) {
+      if (typeof combineData.endDate === 'string') {
+        endDate = combineData.endDate;
+      } else {
+        endDate = combineData.endDate.format();
+      }
+    } else if (combineData.endDate === null) {
+      endDate = null;
+    }
+
     const updatedActivity = await prisma.activity.update({
       where: { id: id },
       data: {
@@ -261,16 +273,12 @@ export const modifyMetadata = async (
           typeof combineData.startDate === 'string'
             ? combineData.startDate
             : combineData.startDate.format(),
-        endDate:
-          typeof combineData.endDate === 'string'
-            ? combineData.endDate
-            : combineData.endDate.format(),
+        endDate,
         source: combineData.source,
       },
     });
     return updatedActivity;
   }
-  return;
 };
 
 /**
