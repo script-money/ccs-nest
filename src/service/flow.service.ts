@@ -21,6 +21,7 @@ import {
   Injectable,
   CACHE_MANAGER,
   forwardRef,
+  OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from 'nestjs-config';
 import { Cache } from 'cache-manager';
@@ -33,7 +34,7 @@ const NonFungibleTokenPath = '"../../contracts/NonFungibleToken.cdc"';
 const MemorialsPath = '"../../contracts/Memorials.cdc"';
 
 @Injectable()
-export class FlowService {
+export class FlowService implements OnModuleInit {
   private minterFlowAddress: Address;
   public minterKeys: Key[];
   private fungibleToken: Address;
@@ -64,6 +65,21 @@ export class FlowService {
       .config()
       .get('accessNode.api')
       .then((d: string) => this.logger.log('Flow Connect to', d));
+  }
+
+  onModuleInit() {
+    // find if ../../../cadence/transactions/ folder exists
+    const transactionsFolder = join(__dirname, '../../../cadence/transactions');
+    if (!existsSync(transactionsFolder)) {
+      this.logger.error(
+        '❌❌❌ No cadence transactions folder found, please copy it to root folder',
+      );
+      setTimeout(() => {
+        process.exit(1);
+      }, 5000);
+    } else {
+      this.logger.log('Found cadence transactions folder.');
+    }
   }
 
   authorizeMinter(keyToUse: Key) {
