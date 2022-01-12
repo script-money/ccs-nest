@@ -7,13 +7,10 @@
   "license": "UNLICENSED",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build:testnet": "npm run prebuild && NODE_ENV=testnet nest build",
-    "run:testnet": "NODE_ENV=testnet node dist/src/main.js",
+    "build": "npm run prebuild && NODE_ENV=testnet nest build",
+    "run": "NODE_ENV=testnet node dist/src/main.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
-    "copy_config": "cp ../dappstarter/packages/dapplib/src/dapp-config.json src/config",
-    "start:local": "yarn copy_config && NODE_ENV=local nest start --watch",
-    "start:testnet": "NODE_ENV=testnet nest start --watch",
+    "start": "NODE_ENV=testnet nest start --watch",
     "start:debug": "nest start --debug --watch",
     "migrate": "prisma migrate deploy",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
@@ -21,12 +18,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:db": "yarn test:db:act && yarn test:db:mem && yarn test:db:bal && yarn test:db:ccs",
-    "test:db:act": "npx prisma migrate reset -f && jest --runTestsByPath ./test/prisma/activity.test.ts",
-    "test:db:mem": "npx prisma migrate reset -f && jest --runTestsByPath ./test/prisma/memorials.test.ts",
-    "test:db:bal": "npx prisma migrate reset -f && jest --runTestsByPath ./test/prisma/ballot.test.ts",
-    "test:db:ccs": "npx prisma migrate reset -f && jest --runTestsByPath ./test/prisma/ccsToken.test.ts"
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@huangang/nestjs-simple-redis-lock": "^0.5.0",
