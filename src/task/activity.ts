@@ -1,6 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { MID_INTERVAL, SHORT_INTERVAL, TaskUtils } from './utils';
+import {
+  LONG_INTERVAL,
+  MID_INTERVAL,
+  SHORT_INTERVAL,
+  TaskUtils,
+} from './utils';
 import { ConfigService } from 'nestjs-config';
 import {
   closeActivity,
@@ -99,5 +104,11 @@ export class ActivityTask {
   @RedisLock('closeActivity', 24 * 60 * 60 * 1000) // 1 day release lock
   async closeActivity() {
     await this.activityService.close(this.closeActivityIntervalMinutes);
+  }
+
+  @Cron(LONG_INTERVAL)
+  @RedisLock('pushToDiscord', 60 * 60 * 1000) // 1 hour release lock
+  async pushToDiscord() {
+    await this.activityService.pushToDiscord();
   }
 }

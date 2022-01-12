@@ -1,5 +1,10 @@
 import moment from 'moment';
-import { Activity, ActivityType } from '@prisma/client';
+import {
+  Activity,
+  ActivityType,
+  CategoriesOnActivities,
+  Vote,
+} from '@prisma/client';
 import { Address, compositeSignature, UFix64, UInt64 } from './flow';
 import { IResponse } from './utils';
 
@@ -92,3 +97,59 @@ export interface IGetActivityResponse extends IResponse {
 export interface ICloseOptionsFromTask {
   id: number;
 }
+
+export interface IRecommendActivity {
+  id: number;
+  title: string;
+  content: string | '';
+  source: string | '';
+  startDate: Date;
+  endDate: Date | null;
+  categories: CategoriesOnActivities[];
+  voteResult: Vote[];
+}
+
+export interface IActivityToDiscord {
+  id: number;
+  title: string;
+  content: string;
+  source: string;
+  link: string;
+  startDate: string;
+  endDate: string;
+  categories: string[];
+}
+
+export const categories = [
+  {
+    id: 0,
+    type: 'All',
+    comment: 'All typeof activities',
+  },
+  {
+    id: 1,
+    type: 'Interact',
+    comment: 'use product with no reward, for future airdrop',
+  },
+  { id: 2, type: 'Form', comment: 'do some task and fill form' },
+  { id: 3, type: 'Vote', comment: 'voting for governance' },
+  { id: 4, type: 'Test', comment: 'test product and report bug' },
+  { id: 5, type: 'Node', comment: "run testnet node'" },
+  { id: 6, type: 'Learn', comment: 'learn to earn' },
+  { id: 7, type: 'Create', comment: 'create media, meme, aircle...' },
+  { id: 8, type: 'Develop', comment: 'develop a product or module' },
+  { id: 9, type: 'whitelist', comment: 'join whitelist' },
+  { id: 10, type: 'IXO', comment: 'join inital offerings' },
+  { id: 11, type: 'LuckDraw', comment: 'join luckdraw' },
+  {
+    id: 12,
+    type: 'Register',
+    comment:
+      'register join Discord,join telegram,create account,subcribe email,signUp website...',
+  },
+  {
+    id: 13,
+    type: 'Airdrop',
+    comment: 'only use for activity/create_airdrop, not confuse with other',
+  },
+];

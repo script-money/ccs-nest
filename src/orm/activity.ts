@@ -626,3 +626,44 @@ const asymmetrySigmoid = (
   const y = bottom + (top - bottom) / denominator;
   return y;
 };
+
+export const getRecommendedActivities = async (k: number) => {
+  const activities = await prisma.activity.findMany({
+    where: {
+      closed: false,
+    },
+    select: {
+      id: true,
+      title: true,
+      content: true,
+      source: true,
+      startDate: true,
+      endDate: true,
+      categories: true,
+      voteResult: true,
+    },
+  });
+
+  const factors = await prisma.economicFactor.findMany({
+    take: -1,
+  });
+
+  const recommendedActivities = activities.filter((activity) => {
+    const positiveTotalVotingPower = Math.abs(
+      activity.voteResult
+        .filter((vote: Vote) => vote.isUpVote)
+        .reduce((a, b: Vote) => +a + +b.power, 0),
+    );
+    const negativeTotalVotingPower = Math.abs(
+      activity.voteResult
+        .filter((vote: Vote) => !vote.isUpVote)
+        .reduce((a, b: Vote) => +a + +b.power, 0),
+    );
+    return (
+      positiveTotalVotingPower + negativeTotalVotingPower >=
+      factors[0].recentAvgTotalPower * k
+    );
+  });
+
+  return recommendedActivities;
+};

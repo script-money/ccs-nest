@@ -1,7 +1,14 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Inject, HttpStatus, Logger } from '@nestjs/common';
-import { lastValueFrom, map } from 'rxjs';
+import moment from 'moment';
+import { catchError, lastValueFrom, map, throwError } from 'rxjs';
 import { UserUpdateDiscordDTO } from 'src/dto/user';
+
+import {
+  IRecommendActivity,
+  categories as categoryDetail,
+  IActivityToDiscord,
+} from 'src/interface/activity';
 import {
   IAccessTokenResponse,
   IDiscordUserInfoResponse,
@@ -85,5 +92,61 @@ export class DiscordService {
         showType: 2,
       };
     }
+  }
+
+  async sendActivity(activity: IRecommendActivity) {
+    const formatActivity: IActivityToDiscord = {
+      id: activity.id,
+      title: activity.title,
+      content: activity.content === '' ? undefined : activity.content,
+      source: activity.source === '' ? undefined : activity.source,
+      link: process.env.DOMAIN + '/activity/' + activity.id,
+      startDate:
+        activity.startDate === null
+          ? undefined
+          : moment(activity.startDate).format('YYYY-MM-DD'),
+      endDate:
+        activity.endDate === null
+          ? undefined
+          : moment(activity.endDate).format('YYYY-MM-DD'),
+      categories: activity.categories.map(
+        (category) =>
+          categoryDetail.find((detail) => detail.id === category.categoryId)
+            .type,
+      ),
+    };
+
+    const value = `
+    ----------------------------------------------------------
+    名称: ${formatActivity.title}
+    介绍: ${formatActivity.content ?? '暂无'}
+    来源: ${formatActivity.source ?? '暂无'}
+    类型: ${formatActivity.categories.join('/')}
+    开始日期: ${formatActivity.startDate}
+    结束日期: ${formatActivity.endDate ?? '暂无'}
+    投票链接: ${formatActivity.link}
+    `;
+    console.log(value);
+    const webhookUrl = `https://discordapp.com/api/v9/webhooks/${process.env.WEBHOOK_ID}/${process.env.WEBHOOK_TOKEN}`;
+    const observableResponse = this.httpService
+      .post(webhookUrl, JSON.stringify({ content: value }), {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: '*/*',
+        },
+        params: {
+          wait: true,
+        },
+      })
+      .pipe(
+        map((response) => response.data),
+        catchError((err) => {
+          this.logger.error('discord webhook api error:', err);
+          return throwError(err);
+        }),
+      );
+
+    const createResponse = await lastValueFrom(observableResponse);
+    console.log(createResponse);
   }
 }

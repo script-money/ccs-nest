@@ -62,6 +62,8 @@ const minterKeys = [
 ];
 
 const facuetAmount = 1000;
+const HTTP_TIMEOUT = 5000;
+const HTTP_RETRY_COUNT = 3;
 
 export default {
   fungibleToken,
@@ -78,4 +80,6 @@ export default {
   minterFlowAddress,
   minterKeys,
   facuetAmount,
+  HTTP_TIMEOUT,
+  HTTP_RETRY_COUNT,
 };

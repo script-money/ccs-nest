@@ -16,11 +16,11 @@ model BlockCursor {
 }
 
 model User {
-  name              String?
-  address           String              @id @unique
-  avatar            String?
+  address           String              @id @unique(map: "User.address_unique")
   discord           String?
+  avatar            String?
   flowns            String?
+  name              String?
   votingPower       Float               @default(0.01) @db.Real
   activities        Activity[]
   BallotBuyRecord   BallotBuyRecord[]
@@ -30,7 +30,7 @@ model User {
 }
 
 model Activity {
-  id            Int                      @id @unique
+  id            Int                      @id @unique(map: "Activity.id_unique")
   createdAt     DateTime                 @default(now())
   updatedAt     DateTime                 @updatedAt
   title         String                   @db.VarChar(255)
@@ -47,7 +47,7 @@ model Activity {
   rewardToken   Float?                   @db.Real
   absTotalPower Float?                   @db.Real
   bouns         Float?                   @db.Real
-  creator       User                     @relation(fields: [creatorAddr], references: [address])
+  creator       User                     @relation(fields: [creatorAddr], references: [address], onDelete: Cascade)
   categories    CategoriesOnActivities[]
   memorials     Memorial[]
   voteResult    Vote[]
@@ -55,15 +55,15 @@ model Activity {
 
 model Category {
   id         Int                      @id @default(autoincrement())
-  type       ActivityType             @unique
+  type       ActivityType             @unique(map: "Category.type_unique")
   activities CategoriesOnActivities[]
 }
 
 model CategoriesOnActivities {
   activityId Int
   categoryId Int
-  activity   Activity @relation(fields: [activityId], references: [id])
-  category   Category @relation(fields: [categoryId], references: [id])
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@id([activityId, categoryId])
 }
@@ -74,9 +74,10 @@ model Vote {
   isUpVote   Boolean  @default(true)
   power      Float    @default(1.0) @db.Real
   activityId Int
-  activity   Activity @relation(fields: [activityId], references: [id])
-  voter      User     @relation(fields: [voterAddr], references: [address])
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  voter      User     @relation(fields: [voterAddr], references: [address], onDelete: Cascade)
 
+  @@unique([voterAddr, activityId], map: "Vote.voterAddr_activityId_unique")
   @@unique([voterAddr, activityId])
 }
 
@@ -97,7 +98,7 @@ model EconomicFactor {
 
 model Memorial {
   ownerAddress     String
-  id               Int      @id @unique
+  id               Int      @id @unique(map: "Memorial.id_unique")
   version          Int
   seriesNumber     Int
   circulatingCount Int
@@ -105,8 +106,8 @@ model Memorial {
   mintedAt         DateTime @default(now())
   isPositive       Boolean
   bonus            Float    @db.Real
-  activity         Activity @relation(fields: [activityId], references: [id])
-  owner            User     @relation(fields: [ownerAddress], references: [address])
+  activity         Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  owner            User     @relation(fields: [ownerAddress], references: [address], onDelete: Cascade)
 }
 
 model BallotBuyRecord {
@@ -115,7 +116,7 @@ model BallotBuyRecord {
   buyerAddress String
   price        Float    @db.Real
   createdAt    DateTime @default(now())
-  buyer        User     @relation(fields: [buyerAddress], references: [address])
+  buyer        User     @relation(fields: [buyerAddress], references: [address], onDelete: Cascade)
 }
 
 model TokenChangeRecord {
@@ -125,7 +126,7 @@ model TokenChangeRecord {
   amount      Float           @db.Real
   userAddress String
   comment     String?
-  user        User            @relation(fields: [userAddress], references: [address])
+  user        User            @relation(fields: [userAddress], references: [address], onDelete: Cascade)
 }
 
 model Faucet {

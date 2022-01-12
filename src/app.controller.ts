@@ -76,6 +76,11 @@ export class AppController {
     return result;
   }
 
+  @Get('/activity/pushToDiscord')
+  async pushToDiscord() {
+    return await this.activityService.pushToDiscord();
+  }
+
   // token
   @Post('/token/free')
   async requestFreeToken(

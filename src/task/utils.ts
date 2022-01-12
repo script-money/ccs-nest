@@ -6,7 +6,7 @@ import { Event } from '../interface/flow';
 
 export const SHORT_INTERVAL = '*/20 * * * * *'; // every 20 seconds
 export const MID_INTERVAL = '*/3 * * * *'; // every 3 minutes
-export const LONG_INTERVAL = '0 0 * * *'; // every day 0:00
+export const LONG_INTERVAL = '*/1 * * *'; // every hour
 
 @Injectable()
 export class TaskUtils {

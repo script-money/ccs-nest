@@ -2,6 +2,7 @@ import {
   Injectable,
   HttpStatus,
   Inject,
+  CACHE_MANAGER,
   Logger,
   forwardRef,
 } from '@nestjs/common';
@@ -17,12 +18,15 @@ import {
   getActivities,
   getActivitiesToClose,
   getActivity,
+  getRecommendedActivities,
   modifyMetadata,
 } from '../orm/activity';
 import * as fcl from '@onflow/fcl';
 import { FlowService } from './flow.service';
 import { ActivityTask } from 'src/task/activity';
 import { IResponse } from 'src/interface/utils';
+import { Cache } from 'cache-manager';
+import { DiscordService } from './discord.service';
 
 @Injectable()
 export class ActivityService {
@@ -32,6 +36,10 @@ export class ActivityService {
     @Inject(FlowService) private readonly flowService: FlowService,
     @Inject(forwardRef(() => ActivityTask))
     private readonly activityTask: ActivityTask,
+    @Inject(DiscordService)
+    private readonly discordService: DiscordService,
+    @Inject(CACHE_MANAGER)
+    private cacheManager: Cache,
   ) {}
 
   async queryMany(options: ActivitiesGetDTO): Promise<IGetActivitiesResponse> {
@@ -186,6 +194,59 @@ export class ActivityService {
         errorCode: HttpStatus.NOT_MODIFIED,
         errorMessage: `You can't update parameter`,
         showType: 1,
+      };
+    }
+  }
+
+  async pushToDiscord(privateKey?: string): Promise<IResponse> {
+    if (
+      !this.flowService.minterKeys.some((key) => key.privateKey === privateKey)
+    ) {
+      return {
+        success: false,
+        data: null,
+        errorCode: HttpStatus.NOT_ACCEPTABLE,
+        errorMessage: `You should use admin key to update parameter`,
+        showType: 1,
+      };
+    }
+    try {
+      const activities = await getRecommendedActivities(0.6);
+      if (activities.length === 0) {
+        this.logger.log('No activity push to discord');
+        return {
+          success: false,
+          data: null,
+          errorCode: HttpStatus.NOT_MODIFIED,
+          errorMessage: `No activity push to discord`,
+          showType: 1,
+        };
+      }
+      let count = 0;
+      for (const activity of activities) {
+        const isConsumed = await this.cacheManager.get(
+          `activity:id:${activity.id}`,
+        );
+        if (!isConsumed) {
+          count++;
+          await this.discordService.sendActivity(activity);
+          await this.cacheManager.set(`activity:id:${activity.id}`, true, {
+            ttl: 60 * 60 * 24,
+          });
+        }
+      }
+      return {
+        success: true,
+        data: `push ${count} activity to discord success`,
+      };
+    } catch (error) {
+      this.logger.error('push activity to discord', error);
+      return {
+        success: false,
+        data: null,
+        errorCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage: 'unknow error when push activity to discord',
+        showType: 2,
       };
     }
   }
