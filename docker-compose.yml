@@ -6,8 +6,6 @@ services:
       dockerfile: Dockerfile
     container_name: ccs-nest
     restart: always
-    ports:
-      - 7001:7001
     depends_on:
       - postgres
       - redis
@@ -17,7 +15,7 @@ services:
 
   postgres:
     image: postgres:latest
-    container_name: ccs-postgres
+    container_name: postgres
     restart: always
     ports:
       - 5432:5432
@@ -26,10 +24,19 @@ services:
 
   redis:
     image: redis:latest
-    container_name: ccs-redis
+    container_name: redis
     restart: always
     environment:
       REDIS_PASSWORD: ''
+
+  cors:
+    build: ./docker-nginx-cors/
+    container_name: cors
+    restart: always
+    depends_on:
+      - ccs-nest
+    ports:
+      - '7005:7002'
 
 networks:
   ccs-network:

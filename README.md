@@ -15,15 +15,11 @@ The server side is responsible for
 3. create .env like `DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/DATABASE"` to connect postgres
 4. `yarn prisma migrate dev --name initial` to generate prisma client files
 
-## how to test ORM
-
-test ORM with `yarn test:db`
-
 ## how to run local testnet development environment
 
 1. run redis, postgres in docker,`docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=ccs -p 5432:5432 -d postgres` and `docker run --name redis -p 6379:6379 -d redis`
 2. use `yarn prisma migrate reset` to initiate postgres (if need)
-3. prepare `.env` and `.env.testnet` files, scp `dapp-config.json` to src/config
+3. prepare `.env` and `.env.testnet` files and cadence files
 4. use `yarn start:testnet` to launch server
 5. use `yarn prisma studio` to check database in GUI (if need)
 6. use `pm2 start "yarn start:testnet" --name nest` run on server
@@ -32,8 +28,10 @@ test ORM with `yarn test:db`
 
 1. change localhost:5432 in .env to postgres:5432
 2. change src/config/utils line 25 localhost to redis
-3. use `docker-compose up -d`
-4. `docker-compose up -d --no-deps --build` if need rebuild
+3. change DOMAIN=http://localhost:3000 to url
+4. use `docker-compose up -d`
+5. `docker-compose up -d --no-deps --build` if need rebuild
+6. restore data (see below)
 
 ## how to backup data and restore
 
