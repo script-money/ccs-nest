@@ -6,6 +6,7 @@ COPY package.json .
 COPY prisma ./prisma/
 
 RUN npm install
+RUN npx prisma generate
 
 COPY . .
 RUN npm run build:testnet
@@ -19,11 +20,11 @@ WORKDIR /ccs
 ENV NODE_ENV testnet
 
 COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/node_modules/ ./node_modules
-COPY --from=builder /app/dist/ ./dist/
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist/
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/cadence ./cadence
 
 EXPOSE 7001
 
-CMD ["npm", "run", "run:testnet"]
+CMD npx prisma migrate deploy && npx prisma db seed && npm run run:testnet
