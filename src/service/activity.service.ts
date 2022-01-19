@@ -19,6 +19,7 @@ import {
   getActivitiesToClose,
   getActivity,
   getRecommendedActivities,
+  markActivityConsumed,
   modifyMetadata,
 } from '../orm/activity';
 import * as fcl from '@onflow/fcl';
@@ -206,7 +207,7 @@ export class ActivityService {
         success: false,
         data: null,
         errorCode: HttpStatus.NOT_ACCEPTABLE,
-        errorMessage: `You should use admin key to update parameter`,
+        errorMessage: `You should use admin key to push activity to discord`,
         showType: 1,
       };
     }
@@ -224,20 +225,15 @@ export class ActivityService {
       }
       let count = 0;
       for (const activity of activities) {
-        const isConsumed = await this.cacheManager.get(
-          `activity:id:${activity.id}`,
-        );
-        if (!isConsumed) {
+        if (!activity.consumed) {
           count++;
           await this.discordService.sendActivity(activity);
-          await this.cacheManager.set(`activity:id:${activity.id}`, true, {
-            ttl: 60 * 60 * 24,
-          });
+          await markActivityConsumed(activity.id);
         }
       }
       return {
         success: true,
-        data: `push ${count} activity to discord success`,
+        data: `push ${count} activities to discord success`,
       };
     } catch (error) {
       this.logger.error('push activity to discord', error);

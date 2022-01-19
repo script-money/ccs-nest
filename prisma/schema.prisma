@@ -44,6 +44,7 @@ model Activity {
   upVote        Int?
   downVote      Int?
   closed        Boolean
+  consumed      Boolean
   rewardToken   Float?                   @db.Real
   absTotalPower Float?                   @db.Real
   bouns         Float?                   @db.Real
@@ -144,16 +145,20 @@ enum TokenChangeType {
 
 enum ActivityType {
   Interact
-  Form
+  Meeting
   Vote
-  Test
-  Node
-  Learn
-  Create
-  Develop
+  Claim
   Whitelist
-  IXO
+  Mint
+  Create
   LuckDraw
+  Learn
+  Node
+  Test
+  Develop
   Register
+  Form
+  IXO
+  Other
   Airdrop
 }

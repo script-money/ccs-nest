@@ -18,6 +18,10 @@ async function main() {
         { type: 'LuckDraw' },
         { type: 'Register' },
         { type: 'Airdrop' },
+        { type: 'Mint' },
+        { type: 'Claim' },
+        { type: 'Meeting' },
+        { type: 'Other' },
       ],
     });
     await prisma.economicFactor.create({

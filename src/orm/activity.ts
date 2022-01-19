@@ -55,6 +55,7 @@ export const createActivity = async (eventData: ICreateOptionsFromEvent) => {
         },
       },
       closed: false,
+      consumed: false,
       content,
       startDate,
       upVote: 1,
@@ -641,6 +642,7 @@ export const getRecommendedActivities = async (k: number) => {
       endDate: true,
       categories: true,
       voteResult: true,
+      consumed: true,
     },
   });
 
@@ -666,4 +668,17 @@ export const getRecommendedActivities = async (k: number) => {
   });
 
   return recommendedActivities;
+};
+
+export const markActivityConsumed = async (
+  activityId: number,
+): Promise<void> => {
+  await prisma.activity.update({
+    where: {
+      id: activityId,
+    },
+    data: {
+      consumed: true,
+    },
+  });
 };
