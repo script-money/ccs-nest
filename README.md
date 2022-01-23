@@ -26,12 +26,13 @@ The server side is responsible for
 
 ## how to run deploy to docker environment
 
-1. change localhost:5432 in .env to postgres:5432
-2. change src/config/utils line 25 localhost to redis
-3. change DOMAIN=http://localhost:3000 to url
-4. use `docker-compose up -d`
-5. `docker-compose up -d --no-deps --build` if need rebuild
-6. restore data (see below)
+1. copy .cdc files from cadence folder `rsync -av --progress ../cadence/ cadence/ --exclude .git/ --exclude tests/`
+2. change localhost:5432 in .env to postgres:5432
+3. change src/config/utils line 25 localhost to redis
+4. change DOMAIN=http://localhost:3000 to url in env
+5. use `docker-compose up -d`
+6. `docker-compose up -d --no-deps --build` if need rebuild
+7. restore data (see below)
 
 ## how to backup data and restore
 
