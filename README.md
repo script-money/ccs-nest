@@ -15,6 +15,13 @@ The server side is responsible for
 3. create .env like `DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/DATABASE"` to connect postgres
 4. `yarn prisma migrate dev --name initial` to generate prisma client files
 
+## how to generate local SSL pem files
+
+1. `brew install mkcert`
+2. `mkcert -install`
+3. `mkcert localhost 127.0.0.1 ::1`
+4. copy pem to docker-nginx-cors/cert folder
+
 ## how to run local testnet development environment
 
 1. run redis, postgres in docker,`docker run --name postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=ccs -p 5432:5432 -d postgres` and `docker run --name redis -p 6379:6379 -d redis`

@@ -24,6 +24,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist/
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/cadence ./cadence
+COPY --from=builder /app/docker-nginx-cors/cert ./cert
 
 EXPOSE 7001
 

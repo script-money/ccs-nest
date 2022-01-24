@@ -39,3 +39,4 @@ src/config/dapp-config.json
 .env*
 deploy.sh
 deploy.yaml
+cert

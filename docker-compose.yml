@@ -36,7 +36,8 @@ services:
     depends_on:
       - ccs-nest
     ports:
-      - '7005:7002'
+      - '443:443'
+      - '80:80'
 
 networks:
   ccs-network:
