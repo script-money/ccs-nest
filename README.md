@@ -36,10 +36,11 @@ The server side is responsible for
 1. copy .cdc files from cadence folder `rsync -av --progress ../cadence/ cadence/ --exclude .git/ --exclude tests/`
 2. change localhost:5432 in .env to postgres:5432
 3. change src/config/utils line 25 localhost to redis
-4. change DOMAIN=http://localhost:3000 to url in env
-5. use `docker-compose up -d`
-6. `docker-compose up -d --no-deps --build` if need rebuild
-7. restore data (see below)
+4. change docker-nginx-cors/nginx.conf cert value
+5. change DOMAIN=http://localhost:3000 to url in env
+6. use `docker-compose up -d`
+7. `docker-compose up -d --no-deps --build` if need rebuild
+8. restore data (see below)
 
 ## how to backup data and restore
 
