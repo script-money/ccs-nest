@@ -109,11 +109,16 @@ export class DiscordService {
         activity.endDate === null
           ? undefined
           : moment(activity.endDate).format('YYYY-MM-DD'),
-      categories: activity.categories.map(
-        (category) =>
-          categoryDetail.find((detail) => detail.id === category.categoryId)
-            .type,
-      ),
+      categories: activity.categories.map((category) => {
+        const categoryFind = categoryDetail.find(
+          (detail) => detail.id === category.categoryId,
+        );
+        if (categoryFind !== undefined) {
+          return categoryFind.type;
+        } else {
+          this.logger.warn(`Can not find category type ${category}`);
+        }
+      }),
     };
 
     const value = `
