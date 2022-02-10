@@ -589,11 +589,9 @@ export const closeActivity = async (options: ICloseOptionsFromTask) => {
   };
 
   const mintNFTTransactions = [];
-  const batchMintAmount = 2; // mint N NFT per transaction, suggestion 5-10
+  const batchMintAmount = 5; // mint N NFT per transaction, suggestion 5-10
   for (const x of Array(
-    ~~(mintPositive
-      ? positiveVoteCount
-      : negativeVoteCount / batchMintAmount + 1), // [...Array(n).keys()]
+    ~~(mintPositive ? positiveVoteCount : negativeVoteCount / batchMintAmount), // [...Array(n).keys()]
   ).keys()) {
     const start = x * batchMintAmount;
     const end = start + batchMintAmount;
