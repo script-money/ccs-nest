@@ -440,27 +440,30 @@ export const closeActivity = async (options: ICloseOptionsFromTask) => {
     orderBy: { id: 'desc' },
   });
 
-  const positiveTotalVotingPower = Math.abs(
-    activity.voteResult
-      .filter((vote: Vote) => vote.isUpVote)
-      .reduce((a, b: Vote) => +a + +b.power, 0),
+  const positiveVotes = activity.voteResult.filter(
+    (vote: Vote) => vote.isUpVote,
   );
-  // console.log('positiveTotalVotingPower', positiveTotalVotingPower);
+
+  const negativeVotes = activity.voteResult.filter(
+    (vote: Vote) => !vote.isUpVote,
+  );
+
+  const positiveVoteCount = positiveVotes.length;
+  const negativeVoteCount = negativeVotes.length;
+
+  const positiveTotalVotingPower = Math.abs(
+    positiveVotes.reduce((a, b: Vote) => +a + +b.power, 0),
+  );
 
   const negativeTotalVotingPower = Math.abs(
-    activity.voteResult
-      .filter((vote: Vote) => !vote.isUpVote)
-      .reduce((a, b: Vote) => +a + +b.power, 0),
+    negativeVotes.reduce((a, b: Vote) => +a + +b.power, 0),
   );
-  // console.log('negativeTotalVotingPower', negativeTotalVotingPower);
 
   // 2. compute votingRatio by the party with the larger absolute value and recent average voting power
   const absVotingPower = Math.max(
     positiveTotalVotingPower,
     negativeTotalVotingPower,
   );
-
-  // console.log('absVotingPower', absVotingPower);
 
   const recentActivities = await prisma.activity.findMany({
     take: factor.recentN,
@@ -483,7 +486,6 @@ export const closeActivity = async (options: ICloseOptionsFromTask) => {
     factor.recentAvgTotalPower === 0
       ? 1
       : absVotingPower / newRecentAvgTotalPower;
-  // console.log('votingRatio', votingRatio);
 
   // 3. according votingRatio, rewardParams in db and asymmetric curve algorithm, get tokenRatio
   const rewardRatio = asymmetrySigmoid(
@@ -495,13 +497,10 @@ export const closeActivity = async (options: ICloseOptionsFromTask) => {
   );
 
   // 4. update activity in db
-  let rewardToken: number;
-  if (positiveTotalVotingPower <= negativeTotalVotingPower) {
-    rewardToken = 0;
-  } else {
-    rewardToken = rewardRatio * factor.createConsumption;
-  }
-  // console.log('rewardToken', rewardToken);
+  const isMintPositive = positiveTotalVotingPower > negativeTotalVotingPower;
+  const rewardToken = isMintPositive
+    ? rewardRatio * factor.createConsumption
+    : 0;
 
   const bonus = factor.bounsRatio * votingRatio;
 
@@ -523,12 +522,9 @@ export const closeActivity = async (options: ICloseOptionsFromTask) => {
     (acc, value) => acc + value.rewardToken,
     0,
   );
-  // console.log('recentTotalRewards', recentTotalRewards);
 
   const recentTotalComsuption =
     recentActivities.length * factor.createConsumption;
-
-  // console.log('recentTotalComsuption', recentTotalComsuption);
 
   const recentTotalVoteAmount = recentActivities.reduce(
     (acc, value) => acc + value.downVote + value.upVote,
@@ -544,11 +540,7 @@ export const closeActivity = async (options: ICloseOptionsFromTask) => {
     newBallotPrice = factor.ballotMinPrice;
   }
 
-  // console.log('newBallotPrice', newBallotPrice);
-
   const mintPositive = positiveTotalVotingPower > negativeTotalVotingPower;
-
-  // console.log('mintPositive', mintPositive);
 
   if (
     newBallotPrice !== factor.ballotPrice ||
@@ -577,30 +569,68 @@ export const closeActivity = async (options: ICloseOptionsFromTask) => {
     });
   }
 
-  // 6. return services parameters use by send transactions to blockchain
-  return [
-    {
-      path: 'CCSToken/mint_tokens_and_distribute.cdc',
+  // 6. return services parameters use by send transactions to blockchain, 5 NFT per transaction
+  const mintTokenTransaction = {
+    path: 'CCSToken/mint_tokens_and_distribute.cdc',
+    args: [
+      fcl.arg(
+        [{ key: activity.creator.address, value: toUFix64(rewardToken) }],
+        t.Dictionary({ key: t.Address, value: t.UFix64 }),
+      ),
+    ],
+  };
+  const setBolletPriceTransaction = {
+    path: 'Ballot/set_price.cdc',
+    args: [fcl.arg(toUFix64(newBallotPrice), t.UFix64)],
+  };
+  const closeActivityTransaction = {
+    path: 'Activity/close_activity.cdc',
+    args: [fcl.arg(options.id, t.UInt64)],
+  };
+
+  const mintNFTTransactions = [];
+  const batchMintAmount = 2; // mint N NFT per transaction, suggestion 5-10
+  for (const x of Array(
+    ~~(mintPositive
+      ? positiveVoteCount
+      : negativeVoteCount / batchMintAmount + 1), // [...Array(n).keys()]
+  ).keys()) {
+    const start = x * batchMintAmount;
+    const end = start + batchMintAmount;
+    console.log(`mint batch x, ${start} to ${end}`);
+    const selectVotes = (mintPositive ? positiveVotes : negativeVotes).slice(
+      start,
+      end,
+    );
+    if (selectVotes.length === 0) {
+      break;
+    }
+    const mintNFTTransaction = {
+      path: 'Activity/batch_mint_memorials.cdc',
       args: [
+        fcl.arg(options.id, t.UInt64), // activityId
+        fcl.arg(mintPositive ? toUFix64(bonus) : toUFix64(0), t.UFix64), // bonus
+        fcl.arg(mintPositive, t.Bool), // mintPositive
         fcl.arg(
-          [{ key: activity.creator.address, value: toUFix64(rewardToken) }],
-          t.Dictionary({ key: t.Address, value: t.UFix64 }),
-        ),
+          selectVotes.map((v) => ({ key: v.voterAddr, value: mintPositive })),
+          t.Dictionary({ key: t.Address, value: t.Bool }),
+        ), // voteDict
+        fcl.arg(start, t.UInt64), // startFrom,
+        fcl.arg(null, t.Optional(t.Bool)), // isAirdrop
+        fcl.arg(null, t.Optional(t.UInt64)), // totalCount
       ],
-    },
-    {
-      path: 'Ballot/set_price.cdc',
-      args: [fcl.arg(toUFix64(newBallotPrice), t.UFix64)],
-    },
-    {
-      path: 'Activity/close_activity.cdc',
-      args: [
-        fcl.arg(options.id, t.UInt64),
-        fcl.arg(toUFix64(bonus), t.UFix64),
-        fcl.arg(mintPositive, t.Bool),
-      ],
-    },
+    };
+    mintNFTTransactions.push(mintNFTTransaction);
+  }
+
+  const allTransactions = [
+    mintTokenTransaction,
+    setBolletPriceTransaction,
+    closeActivityTransaction,
+    ...mintNFTTransactions,
   ] as flowInteractOptions[];
+
+  return allTransactions;
 };
 
 /**
