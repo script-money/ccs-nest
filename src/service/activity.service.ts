@@ -28,6 +28,7 @@ import { ActivityTask } from 'src/task/activity';
 import { IResponse } from 'src/interface/utils';
 import { Cache } from 'cache-manager';
 import { DiscordService } from './discord.service';
+import { flowInteractOptions } from 'src/interface/flow';
 
 @Injectable()
 export class ActivityService {
@@ -145,6 +146,11 @@ export class ActivityService {
     }
   }
 
+  async sendSingleTx(txArg: flowInteractOptions, keyOffset = 0) {
+    const result = await this.flowService.sendTxByAdmin(txArg, keyOffset);
+    if (result !== undefined) await fcl.tx(result).onceSealed();
+  }
+
   async close(intervalMinutes: number): Promise<IGetActivityResponse> {
     const activityIDs = await getActivitiesToClose(intervalMinutes);
     if (activityIDs === null) {
@@ -156,11 +162,14 @@ export class ActivityService {
         const txArgList = await closeActivity({
           id: activityID.id,
         });
-        for (const txArg of txArgList) {
-          this.logger.log('txArg', txArg);
-          const result = await this.flowService.sendTxByAdmin(txArg);
-          if (result !== undefined) await fcl.tx(result).onceSealed();
-        }
+        const [closeArg, ...otherArgs] = txArgList;
+        await this.sendSingleTx(closeArg);
+        const promise = [];
+        otherArgs.forEach((txArg, index) => {
+          console.log('push txArg', txArg);
+          promise.push(this.sendSingleTx(txArg, index));
+        });
+        await Promise.all(promise);
       } catch (error) {
         console.error(`close activiy ${activityID.id} error:`, error);
         continue;

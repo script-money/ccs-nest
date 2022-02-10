@@ -8,7 +8,7 @@ const nonFungibleToken = '0x631e88ae7f1d7c20';
 const shortQueryBlock = 20; // fit every 20 seconds
 const midRangeQueryBlock = 60; // fit greater than 1 minute
 const maxRangeQueryBlock = 250;
-const closeActivityIntervalMinutes = 60 * 24; // 1 day
+const closeActivityIntervalMinutes = 3; // 1 day = 60 * 24
 const startHeight = Number(process.env.START_HEIGHT); // check at https://testnet.flowscan.org/
 
 const minterFlowAddress = process.env.MINTER_ADDRESS;
@@ -21,31 +21,6 @@ const minterKeys = [
     revoked: false,
   },
   {
-    keyId: 1,
-    weight: 1000,
-    revoked: true,
-  },
-  {
-    keyId: 2,
-    weight: 1000,
-    revoked: true,
-  },
-  {
-    keyId: 3,
-    weight: 0,
-    revoked: true,
-  },
-  {
-    keyId: 4,
-    weight: 0,
-    revoked: true,
-  },
-  {
-    keyId: 5,
-    weight: 0,
-    revoked: true,
-  },
-  {
     publicKey: process.env.PUBLICKEY_6,
     privateKey: process.env.PRIVATEKEY_6,
     keyId: 6,
@@ -56,6 +31,27 @@ const minterKeys = [
     publicKey: process.env.PUBLICKEY_7,
     privateKey: process.env.PRIVATEKEY_7,
     keyId: 7,
+    weight: 1000,
+    revoked: false,
+  },
+  {
+    publicKey: process.env.PUBLICKEY_8,
+    privateKey: process.env.PRIVATEKEY_8,
+    keyId: 8,
+    weight: 1000,
+    revoked: false,
+  },
+  {
+    publicKey: process.env.PUBLICKEY_9,
+    privateKey: process.env.PRIVATEKEY_9,
+    keyId: 9,
+    weight: 1000,
+    revoked: false,
+  },
+  {
+    publicKey: process.env.PUBLICKEY_10,
+    privateKey: process.env.PRIVATEKEY_10,
+    keyId: 10,
     weight: 1000,
     revoked: false,
   },

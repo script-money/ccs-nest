@@ -595,7 +595,6 @@ export const closeActivity = async (options: ICloseOptionsFromTask) => {
   ).keys()) {
     const start = x * batchMintAmount;
     const end = start + batchMintAmount;
-    console.log(`mint batch x, ${start} to ${end}`);
     const selectVotes = (mintPositive ? positiveVotes : negativeVotes).slice(
       start,
       end,
@@ -622,9 +621,9 @@ export const closeActivity = async (options: ICloseOptionsFromTask) => {
   }
 
   const allTransactions = [
+    closeActivityTransaction,
     mintTokenTransaction,
     setBolletPriceTransaction,
-    closeActivityTransaction,
     ...mintNFTTransactions,
   ] as flowInteractOptions[];
 

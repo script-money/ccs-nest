@@ -126,16 +126,14 @@ export class FlowService implements OnModuleInit {
     return Buffer.concat([r, s]).toString('hex');
   };
 
-  private async getFreeKey() {
+  private async getFreeKey(keyOffset: number) {
     const seqNumberValue = await this.cacheManager.get('seqNumber');
-    let seqNumber = seqNumberValue ? Number(seqNumberValue) : 0;
-    let keyIndexToUse = seqNumber % this.minterKeys.length;
-    let keyToUse = this.minterKeys[keyIndexToUse];
-    while (keyToUse.revoked) {
-      seqNumber++;
-      keyIndexToUse++;
-      keyToUse = this.minterKeys[keyIndexToUse];
+    if (seqNumberValue === undefined) {
+      await this.cacheManager.set('seqNumber', 0);
     }
+    const seqNumber = seqNumberValue === undefined ? 0 : Number(seqNumberValue);
+    const keyIndexToUse = (seqNumber % this.minterKeys.length) + keyOffset;
+    const keyToUse = this.minterKeys[keyIndexToUse];
     this.logger.log('keyToUse', keyToUse.keyId);
     await this.cacheManager.set('seqNumber', seqNumber + 1);
     return keyToUse;
@@ -172,9 +170,9 @@ export class FlowService implements OnModuleInit {
     return decoded.height;
   }
 
-  async sendTxByAdmin(option: flowInteractOptions) {
+  async sendTxByAdmin(option: flowInteractOptions, keyOffset = 0) {
     this.logger.log('option', option);
-    const keyToUse = await this.getFreeKey();
+    const keyToUse = await this.getFreeKey(keyOffset);
     const authorization = this.authorizeMinter(keyToUse);
     let transaction;
     const filePath = join(
