@@ -136,7 +136,7 @@ export class FlowService implements OnModuleInit {
       keyIndexToUse++;
       keyToUse = this.minterKeys[keyIndexToUse];
     }
-    this.logger.log('keyToUse', keyToUse);
+    this.logger.log('keyToUse', keyToUse.keyId);
     await this.cacheManager.set('seqNumber', seqNumber + 1);
     return keyToUse;
   }
