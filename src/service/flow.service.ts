@@ -126,17 +126,30 @@ export class FlowService implements OnModuleInit {
     return Buffer.concat([r, s]).toString('hex');
   };
 
-  private async getFreeKey(keyOffset: number) {
-    const seqNumberValue = await this.cacheManager.get('seqNumber');
-    if (seqNumberValue === undefined) {
-      await this.cacheManager.set('seqNumber', 0);
+  private async getFreeKey(keyOffset: number): Promise<Key> {
+    const maxLoop = this.minterKeys.length;
+    if (keyOffset > maxLoop) {
+      this.logger.warn(
+        `keyOffset ${keyOffset} is greater than maxLoop ${maxLoop}`,
+      );
+      return;
     }
-    const seqNumber = seqNumberValue === undefined ? 0 : Number(seqNumberValue);
-    const keyIndexToUse = (seqNumber % this.minterKeys.length) + keyOffset;
-    const keyToUse = this.minterKeys[keyIndexToUse];
-    this.logger.log('keyToUse', keyToUse.keyId);
-    await this.cacheManager.set('seqNumber', seqNumber + 1);
-    return keyToUse;
+    for (let i = 0; i < maxLoop - keyOffset; i++) {
+      const isUsing = await this.cacheManager.get<boolean>(
+        (i + keyOffset).toString(),
+      );
+
+      if (isUsing === undefined || !isUsing) {
+        await this.cacheManager.set((i + keyOffset).toString(), true, {
+          ttl: 3,
+        });
+        return this.minterKeys[i + keyOffset];
+      } else {
+        this.logger.log(`Key ${i + keyOffset} is already in use`);
+        continue;
+      }
+    }
+    throw new Error('No free key found');
   }
 
   async sendTx({
@@ -172,8 +185,21 @@ export class FlowService implements OnModuleInit {
 
   async sendTxByAdmin(option: flowInteractOptions, keyOffset = 0) {
     this.logger.log('option', option);
-    const keyToUse = await this.getFreeKey(keyOffset);
-    const authorization = this.authorizeMinter(keyToUse);
+    const firstKey = this.minterKeys[0];
+    let proposerKey;
+    let result = false;
+    while (!result) {
+      try {
+        proposerKey = await this.getFreeKey(keyOffset);
+        result = true;
+      } catch (error) {
+        // wait 1 second
+        this.logger.log('Waiting for free key');
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+    const payerAndAuthorization = this.authorizeMinter(firstKey);
+    const proposeAuthorization = this.authorizeMinter(proposerKey);
     let transaction;
     const filePath = join(
       __dirname,
@@ -198,12 +224,13 @@ export class FlowService implements OnModuleInit {
       const { txId } = await this.sendTx({
         transaction,
         args: option.args,
-        authorizations: [authorization],
-        payer: authorization,
-        proposer: authorization,
+        authorizations: [payerAndAuthorization],
+        payer: payerAndAuthorization,
+        proposer: proposeAuthorization,
       });
-      return txId;
+      return txId; // TODO: could be send fail but close status already update
     } catch (error) {
+      this.logger.error('error', error);
       throw new Error(error);
     }
   }
