@@ -612,7 +612,7 @@ export const closeActivity = async (options: ICloseOptionsFromTask) => {
           selectVotes.map((v) => ({ key: v.voterAddr, value: mintPositive })),
           t.Dictionary({ key: t.Address, value: t.Bool }),
         ), // voteDict
-        fcl.arg(start, t.UInt64), // startFrom,
+        fcl.arg(start + 1, t.UInt64), // startFrom,
         fcl.arg(null, t.Optional(t.Bool)), // isAirdrop
         fcl.arg(null, t.Optional(t.UInt64)), // totalCount
       ],
