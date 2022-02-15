@@ -166,7 +166,6 @@ export class ActivityService {
         await this.sendSingleTx(closeArg);
         const promise = [];
         otherArgs.forEach((txArg, index) => {
-          console.log('push txArg', txArg);
           promise.push(this.sendSingleTx(txArg, index));
         });
         await Promise.all(promise);

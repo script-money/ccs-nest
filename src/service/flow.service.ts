@@ -158,7 +158,7 @@ export class FlowService implements OnModuleInit {
     proposer,
     authorizations,
     payer,
-  }): Promise<{ txId: string; data: FlowTxData }> {
+  }): Promise<{ txId: { transactionId: string }; data: FlowTxData }> {
     const response = await fcl.send([
       fcl.transaction`
         ${transaction}
@@ -184,7 +184,6 @@ export class FlowService implements OnModuleInit {
   }
 
   async sendTxByAdmin(option: flowInteractOptions, keyOffset = 0) {
-    this.logger.log('option', option);
     const firstKey = this.minterKeys[0];
     let proposerKey;
     let result = false;
@@ -193,7 +192,6 @@ export class FlowService implements OnModuleInit {
         proposerKey = await this.getFreeKey(keyOffset);
         result = true;
       } catch (error) {
-        // wait 1 second
         this.logger.log('Waiting for free key');
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
@@ -220,19 +218,31 @@ export class FlowService implements OnModuleInit {
       return;
     }
 
-    try {
-      const { txId } = await this.sendTx({
+    let retries = 0;
+    let txResult = false;
+    while (!txResult && retries <= 3) {
+      const { txId, data } = await this.sendTx({
         transaction,
         args: option.args,
         authorizations: [payerAndAuthorization],
         payer: payerAndAuthorization,
         proposer: proposeAuthorization,
       });
-      return txId; // TODO: could be send fail but close status already update
-    } catch (error) {
-      this.logger.error('error', error);
-      throw new Error(error);
+      if (data.errorMessage !== '') {
+        this.logger.warn(
+          `sendTxByAdmin error ${data.errorMessage}, retry ${retries}`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        retries++;
+        continue;
+      } else {
+        txResult = true;
+        this.logger.log(`flowInteractOptions: ${option}`);
+        this.logger.log(`${txId.transactionId}`);
+        return txId;
+      }
     }
+    this.logger.warn(`sendTxByAdmin(retry max) error when run: ${option}`);
   }
 
   async getEvents({
