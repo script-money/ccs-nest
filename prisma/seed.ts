@@ -27,6 +27,11 @@ async function main() {
     await prisma.economicFactor.create({
       data: {},
     });
+    await prisma.serverStatus.create({
+      data: {
+        maintenance: false,
+      },
+    });
   } catch (error) {
     console.log('initiate data is already in db, skip seed');
   }

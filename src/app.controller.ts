@@ -27,6 +27,7 @@ import { MemorialsService } from './service/memorials.service';
 import { UserService } from './service/user.service';
 import { DiscordService } from './service/discord.service';
 import { UserUpdateDiscordDTO } from './dto/user';
+import { ManageService } from './service/manage.service';
 
 @Controller('api')
 export class AppController {
@@ -39,6 +40,7 @@ export class AppController {
     private readonly ccsTokenService: CCSTokenService,
     @Inject(FlowService) private readonly flowService: FlowService,
     @Inject(DiscordService) private readonly discordService: DiscordService,
+    @Inject(ManageService) private readonly manageService: ManageService,
   ) {}
   // user
   @Get('/user/:address')
@@ -79,6 +81,15 @@ export class AppController {
   @Get('/activity/pushToDiscord')
   async pushToDiscord() {
     return await this.activityService.pushToDiscord();
+  }
+
+  @Post('/activity/hide')
+  async hideActivity(
+    @Query('id') id: number,
+    @Query('key') key: string,
+  ): Promise<IResponse> {
+    const result = await this.activityService.hideActivity(id, key);
+    return result;
   }
 
   // token
@@ -122,5 +133,19 @@ export class AppController {
     @Query() params: UserUpdateDiscordDTO,
   ): Promise<IResponse> {
     return await this.discordService.updateDiscordInfo(params);
+  }
+
+  // manage
+  @Post('/manage/maintenance')
+  async maintenance(
+    @Query('shutdown') inMaintenance: string,
+  ): Promise<IResponse> {
+    return await this.manageService.toggleMaintenance(inMaintenance);
+  }
+
+  // get maintenance status
+  @Get('/manage/maintenance')
+  async getMaintenanceStatus(): Promise<IResponse> {
+    return await this.manageService.getMaintenanceStatus();
   }
 }

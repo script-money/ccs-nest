@@ -19,6 +19,7 @@ import { RedisManager, RedisModule } from '@liaoliaots/nestjs-redis';
 import { RedisLockModule } from '@huangang/nestjs-simple-redis-lock';
 import { HttpModule } from '@nestjs/axios';
 import { DiscordService } from './service/discord.service';
+import { ManageService } from './service/manage.service';
 
 const ENV = process.env.NODE_ENV;
 
@@ -65,6 +66,7 @@ const ENV = process.env.NODE_ENV;
     CCSTokenTask,
     MemorialsTask,
     DiscordService,
+    ManageService,
   ],
   controllers: [AppController],
 })

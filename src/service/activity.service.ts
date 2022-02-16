@@ -21,6 +21,7 @@ import {
   getRecommendedActivities,
   markActivityConsumed,
   modifyMetadata,
+  markActivityHidden,
 } from '../orm/activity';
 import * as fcl from '@onflow/fcl';
 import { FlowService } from './flow.service';
@@ -251,6 +252,40 @@ export class ActivityService {
         errorCode: HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessage: 'unknow error when push activity to discord',
         showType: 2,
+      };
+    }
+  }
+
+  async hideActivity(
+    activityId: number,
+    privateKey: string,
+  ): Promise<IResponse> {
+    if (
+      !this.flowService.minterKeys.some((key) => key.privateKey === privateKey)
+    ) {
+      return {
+        success: false,
+        data: null,
+        errorCode: HttpStatus.NOT_ACCEPTABLE,
+        errorMessage: `You should use admin key to update parameter`,
+        showType: 1,
+      };
+    }
+
+    try {
+      await markActivityHidden(Number(activityId));
+      return {
+        success: true,
+        data: `hide activity ${activityId} success`,
+      };
+    } catch (error) {
+      this.logger.error('hideActivity', error);
+      return {
+        success: false,
+        data: null,
+        errorCode: HttpStatus.NOT_MODIFIED,
+        errorMessage: `You can't hideActivity with id ${activityId}`,
+        showType: 1,
       };
     }
   }

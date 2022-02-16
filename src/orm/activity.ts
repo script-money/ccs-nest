@@ -151,6 +151,9 @@ export const getActivities = async ({
           address: createBy,
         },
       },
+      {
+        hidden: false,
+      },
     ],
   };
 
@@ -706,6 +709,17 @@ export const markActivityConsumed = async (
     },
     data: {
       consumed: true,
+    },
+  });
+};
+
+export const markActivityHidden = async (activityId: number): Promise<void> => {
+  await prisma.activity.update({
+    where: {
+      id: activityId,
+    },
+    data: {
+      hidden: true,
     },
   });
 };

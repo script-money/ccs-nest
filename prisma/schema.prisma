@@ -45,6 +45,7 @@ model Activity {
   downVote      Int?
   closed        Boolean
   consumed      Boolean
+  hidden        Boolean                  @default(false)
   rewardToken   Float?                   @db.Real
   absTotalPower Float?                   @db.Real
   bouns         Float?                   @db.Real
@@ -134,6 +135,10 @@ model Faucet {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   address   String
+}
+
+model ServerStatus {
+  maintenance Boolean @unique @default(false)
 }
 
 enum TokenChangeType {
