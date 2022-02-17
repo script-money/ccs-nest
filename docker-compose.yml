@@ -1,14 +1,15 @@
 version: '3.8'
 services:
-  ccs-nest:
+  nest:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ccs-nest
+    container_name: nest
     restart: always
     depends_on:
       - postgres
       - redis
+      - backup
     env_file:
       - .env
       - .env.testnet
@@ -34,10 +35,17 @@ services:
     container_name: cors
     restart: always
     depends_on:
-      - ccs-nest
+      - nest
     ports:
       - '443:443'
       - '80:80'
 
-networks:
-  ccs-network:
+  backup:
+    build: ./filebase-backup/
+    container_name: backup
+    volumes:
+      - ./filebase-backup/scripts:/scripts
+      - ./filebase-backup/crontab:/crontab
+    depends_on:
+      - postgres
+    env_file: .env

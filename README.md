@@ -42,9 +42,14 @@ The server side is responsible for
 7. `docker-compose up -d --no-deps --build` if need rebuild
 8. restore data (see below)
 
-## how to backup data and restore
+## how to backup data and restore manualy
 
 1. Backup: At server, run
    `docker exec ccs-postgres /bin/bash -c "PGPASSWORD=PASSWORD pg_dump --username postgres --clean ccs" > ~/backup/$(date +%Y%m%d).sql`
 2. Download: `scp ccs:~/backup/$(date +%Y%m%d).sql ./data_backup/` , ccs is server alias
 3. Restore: `cat ~/ccs/data_backup/$(date +%Y%m%d).sql | docker exec -i postgres psql -U postgres -d ccs`
+
+## how to backup and restore from filebase
+
+1. run `docker exec -it backup bash /scripts/backup.sh && docker-compose up -d --no-deps --build`
+2. run `docker exec -it backup bash /scripts/restore.sh`
