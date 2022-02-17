@@ -237,7 +237,7 @@ export class FlowService implements OnModuleInit {
         continue;
       } else {
         txResult = true;
-        this.logger.log(`flowInteractOptions: ${option}`);
+        this.logger.log('flowInteractOptions:', option);
         this.logger.log(`${txId.transactionId}`);
         return txId;
       }
@@ -293,7 +293,7 @@ export class FlowService implements OnModuleInit {
   TPSAccountResolver = async (account: Account) => {
     const tpsPayerAddress = this.minterFlowAddress;
     const tpsPayerKeyID = 0;
-    const tpsTempID = `${tpsPayerAddress}-${tpsPayerKeyID}`;
+    const tpsTempID = `${tpsPayerAddress} - ${tpsPayerKeyID}`;
     return {
       ...account,
       tempId: tpsTempID,
@@ -307,12 +307,12 @@ export class FlowService implements OnModuleInit {
     // For security, ensure that `signablePayerAddress` is not specified as a transaction authorizer or proposer.
     if (signable.voucher.authorizers.includes(signablePayerAddress)) {
       throw new Error(
-        `TPSSigner Error: signablePayerAddress=${signablePayerAddress} specified as a transaction authorizer in transaction signable.`,
+        `TPSSigner Error: signablePayerAddress = ${signablePayerAddress} specified as a transaction authorizer in transaction signable.`,
       );
     }
     if (signable.voucher.proposalKey.address === signablePayerAddress) {
       throw new Error(
-        `TPSSigner Error: signablePayerAddress=${signablePayerAddress} specified as the transaction proposer in transaction signable.`,
+        `TPSSigner Error: signablePayerAddress = ${signablePayerAddress} specified as the transaction proposer in transaction signable.`,
       );
     }
     const encodedMessage = fcl.WalletUtils.encodeMessageFromSignable(
