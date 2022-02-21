@@ -178,9 +178,13 @@ export class FlowService implements OnModuleInit {
   }
 
   async getLatestBlockHeight(): Promise<number> {
-    const block = await fcl.send([fcl.getBlock(true)]);
-    const decoded = await fcl.decode(block);
-    return decoded.height;
+    try {
+      const block = await fcl.send([fcl.getBlock(true)]);
+      const decoded = await fcl.decode(block);
+      return decoded.height;
+    } catch (error) {
+      this.logger.warn('Error getting latest block height', error);
+    }
   }
 
   async sendTxByAdmin(option: flowInteractOptions, keyOffset = 0) {
