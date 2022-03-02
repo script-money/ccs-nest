@@ -39,6 +39,7 @@
     "elliptic": "^6.5.4",
     "ioredis": "^4.28.0",
     "moment": "^2.29.1",
+    "moment-timezone": "^0.5.34",
     "nestjs-config": "^1.4.9",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",

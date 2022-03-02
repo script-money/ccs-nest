@@ -3,6 +3,7 @@ import { Address } from '../interface/flow';
 import { ActivityType } from '@prisma/client';
 import { IsNumberString, IsOptional, ValidateIf } from 'class-validator';
 import { ToBoolean } from './transfer';
+import { IsFlowAddress, IsOnlyDate } from './custom';
 
 export class ActivitiesGetDTO {
   @IsNumberString()
@@ -27,6 +28,7 @@ export class ActivitiesGetDTO {
   @ToBoolean()
   canVote?: boolean;
 
+  @IsFlowAddress()
   @IsOptional()
   address?: Address;
 
@@ -36,4 +38,13 @@ export class ActivitiesGetDTO {
 
   @IsOptional()
   createBy?: string;
+}
+
+export class CalendarActivityGetDTO {
+  @IsFlowAddress()
+  voter: Address;
+
+  @IsOptional()
+  @IsOnlyDate()
+  date?: moment.Moment;
 }

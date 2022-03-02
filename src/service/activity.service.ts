@@ -2,16 +2,17 @@ import {
   Injectable,
   HttpStatus,
   Inject,
-  CACHE_MANAGER,
   Logger,
   forwardRef,
 } from '@nestjs/common';
-import { ActivitiesGetDTO } from '../dto/activity';
+import { ActivitiesGetDTO, CalendarActivityGetDTO } from '../dto/activity';
 import {
   IGetActivitiesResponse,
   IGetActivityResponse,
+  IGetCalendarViewActivitiesResponse,
   IModifyMetadataOptions,
   IModifyOptions,
+  getCategoriesNameList,
 } from '../interface/activity';
 import {
   closeActivity,
@@ -22,14 +23,15 @@ import {
   markActivityConsumed,
   modifyMetadata,
   markActivityHidden,
+  getCalendarViewActivities,
 } from '../orm/activity';
 import * as fcl from '@onflow/fcl';
 import { FlowService } from './flow.service';
 import { ActivityTask } from 'src/task/activity';
 import { IResponse } from 'src/interface/utils';
-import { Cache } from 'cache-manager';
 import { DiscordService } from './discord.service';
 import { flowInteractOptions } from 'src/interface/flow';
+import moment from 'moment-timezone';
 
 @Injectable()
 export class ActivityService {
@@ -41,8 +43,6 @@ export class ActivityService {
     private readonly activityTask: ActivityTask,
     @Inject(DiscordService)
     private readonly discordService: DiscordService,
-    @Inject(CACHE_MANAGER)
-    private cacheManager: Cache,
   ) {}
 
   async queryMany(options: ActivitiesGetDTO): Promise<IGetActivitiesResponse> {
@@ -60,6 +60,43 @@ export class ActivityService {
         success: false,
         data: [],
         total: 0,
+        errorCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage: 'unknow error when get activities',
+        showType: 2,
+      };
+    }
+  }
+
+  async queryCalendarViews(
+    options: CalendarActivityGetDTO,
+  ): Promise<IGetCalendarViewActivitiesResponse> {
+    try {
+      const activities = await getCalendarViewActivities({
+        ...options,
+        date: moment.tz(options.date, 'Asia/Shanghai'),
+      });
+
+      const wrapActivities = activities.map((activity) => {
+        const { endDate, categories, ...anotherInfo } = activity;
+        return {
+          ...anotherInfo,
+          categories: getCategoriesNameList(categories),
+          endDate:
+            endDate === null
+              ? null
+              : moment.tz(endDate, 'Asia/Shanghai').format('YYYY-MM-DD'),
+        };
+      });
+
+      return {
+        success: true,
+        data: wrapActivities,
+      };
+    } catch (error) {
+      console.warn(error);
+      return {
+        success: false,
+        data: [],
         errorCode: HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessage: 'unknow error when get activities',
         showType: 2,

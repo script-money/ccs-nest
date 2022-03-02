@@ -8,11 +8,12 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { ActivitiesGetDTO } from './dto/activity';
+import { ActivitiesGetDTO, CalendarActivityGetDTO } from './dto/activity';
 import { MemorialsGetDTO } from './dto/memorials';
 import {
   IGetActivitiesResponse,
   IGetActivityResponse,
+  IGetCalendarViewActivitiesResponse,
   IModifyOptions,
 } from './interface/activity';
 import { IRequestFreeTokenResponse } from './interface/ccsToken';
@@ -61,6 +62,14 @@ export class AppController {
     @Query() queryOptions: ActivitiesGetDTO,
   ): Promise<IGetActivitiesResponse> {
     const result = await this.activityService.queryMany(queryOptions);
+    return result;
+  }
+
+  @Get('/calendarView')
+  async getCalendarView(
+    @Query() queryOptions: CalendarActivityGetDTO,
+  ): Promise<IGetCalendarViewActivitiesResponse> {
+    const result = await this.activityService.queryCalendarViews(queryOptions);
     return result;
   }
 

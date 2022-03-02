@@ -57,6 +57,24 @@ export interface IQueryManyOptions {
   createBy?: Address;
 }
 
+export interface IQueryCalendarViewOptions {
+  voter: Address;
+  date?: moment.Moment;
+}
+
+export interface CalendarViewActivity {
+  id: number;
+  title: string;
+  endDate: string | null;
+  content: string;
+  source: string;
+  categories: string[];
+}
+
+export interface IGetCalendarViewActivitiesResponse extends IResponse {
+  data: CalendarViewActivity[] | null;
+}
+
 export interface IModifyOptions {
   id: number;
   message: string;
@@ -166,3 +184,16 @@ export const categories = [
     comment: 'only use for activity/create_airdrop, not confuse with other',
   },
 ];
+
+export const getCategoriesNameList = (
+  categoriesForDB: CategoriesOnActivities[],
+): string[] => {
+  return categoriesForDB.map((category) => {
+    const categoryFind = categories.find(
+      (detail) => detail.id === category.categoryId,
+    );
+    if (categoryFind !== undefined) {
+      return categoryFind.type;
+    }
+  });
+};

@@ -5,6 +5,7 @@ import {
   IConsumptionUpdatedFromEvent,
   ICreateOptionsFromEvent,
   IModifyMetadataOptions,
+  IQueryCalendarViewOptions,
   IQueryManyOptions,
   IRewardParameterUpdatedFromEvent,
   IVotedOptionsFromEvent,
@@ -215,6 +216,61 @@ export const getActivities = async ({
     }),
     prisma.activity.count({ where: addJoinCondition }),
   ]);
+};
+
+/**
+ * get activity has voted and can join
+ * @returns activity[] | null
+ */
+export const getCalendarViewActivities = async ({
+  voter,
+  date,
+}: IQueryCalendarViewOptions) => {
+  const activitiesSummary = await prisma.activity.findMany({
+    where: {
+      AND: [
+        {
+          voteResult: {
+            some: {
+              AND: {
+                voterAddr: voter,
+                isUpVote: true,
+              },
+            },
+          },
+        },
+        {
+          startDate: {
+            lte: date ? date.toDate() : new Date(),
+          },
+        },
+        {
+          hidden: false,
+        },
+      ],
+      OR: [
+        {
+          endDate: {
+            gte: date ? date.toDate() : new Date(),
+          },
+        },
+        {
+          endDate: {
+            equals: null,
+          },
+        },
+      ],
+    },
+    select: {
+      id: true,
+      title: true,
+      endDate: true,
+      content: true,
+      categories: true,
+      source: true,
+    },
+  });
+  return activitiesSummary;
 };
 
 /**

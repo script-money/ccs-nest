@@ -6,8 +6,8 @@ import { UserUpdateDiscordDTO } from 'src/dto/user';
 
 import {
   IRecommendActivity,
-  categories as categoryDetail,
   IActivityToDiscord,
+  getCategoriesNameList,
 } from 'src/interface/activity';
 import {
   IAccessTokenResponse,
@@ -104,21 +104,12 @@ export class DiscordService {
       startDate:
         activity.startDate === null
           ? undefined
-          : moment(activity.startDate).format('YYYY-MM-DD'),
+          : moment.tz(activity.startDate, 'Asia/Shanghai').format('YYYY-MM-DD'),
       endDate:
         activity.endDate === null
           ? undefined
-          : moment(activity.endDate).format('YYYY-MM-DD'),
-      categories: activity.categories.map((category) => {
-        const categoryFind = categoryDetail.find(
-          (detail) => detail.id === category.categoryId,
-        );
-        if (categoryFind !== undefined) {
-          return categoryFind.type;
-        } else {
-          this.logger.warn(`Can not find category type ${category}`);
-        }
-      }),
+          : moment.tz(activity.endDate, 'Asia/Shanghai').format('YYYY-MM-DD'),
+      categories: getCategoriesNameList(activity.categories),
     };
 
     const value = `
