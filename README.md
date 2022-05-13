@@ -38,9 +38,11 @@ The server side is responsible for
 3. change src/config/utils line 25 localhost to redis
 4. change docker-nginx-cors/nginx.conf cert value
 5. change DOMAIN=http://localhost:3000 to url in env
-6. use `docker-compose up -d`
-7. `docker-compose up -d --no-deps --build` if need rebuild
-8. restore data (see below)
+6. copy cert files in docker-nginx-cors/cert to vps
+7. change BACKUP_PATH in .env for cors
+8. use `docker-compose up -d`
+9. `docker-compose up -d --no-deps --build --remove-orphans` if need rebuild
+10. restore data (see below)
 
 ## how to backup data and restore manualy
 
@@ -53,3 +55,10 @@ The server side is responsible for
 
 1. run `docker exec -it backup bash /scripts/backup.sh && docker-compose up -d --no-deps --build`
 2. run `docker exec -it backup bash /scripts/restore.sh`
+
+## how to update ssl use certbot
+
+1. `docker stop cors`
+2. `cerbot renew`
+3. `cp /etc/letsencrypt/live/test-api.cryptochasers.co/*.pem ~/ccs-nest/docker-nginx-cors/cert/`
+4. `docker-compose up -d --no-deps --build cors`
